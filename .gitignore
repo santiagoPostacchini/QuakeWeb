@@ -1,1 +1,11 @@
 .ai-workflow.log
+
+# Archivos de Quake (id Software): nunca se suben
+*.pak
+*.pk3
+*.kpf
+/id1/
+/rerelease/
+/datos/
+/node_modules/
+/dist/

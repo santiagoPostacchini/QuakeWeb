@@ -4,23 +4,30 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 
 ## Stack
 
-- Lenguaje / runtime: (completar)
-- Gestor de dependencias: (completar)
+- Lenguaje / runtime: TypeScript en el navegador, motor de Quake compilado a WebAssembly (Emscripten). Motor a
+  definir en la etapa 0 (recomendado: FTEQW). Publicación estática en GitHub Pages.
+- Gestor de dependencias: npm (como CSweb: Vite + TypeScript, sin frameworks de interfaz).
 
 ## Comandos
 
-- Instalar: `(completar)`
-- Build: `(completar)`
+- Instalar: `(completar en la etapa 0)`
+- Build: `(completar en la etapa 0)`
 - Tests: `(completar)` (criterio de aceptación habitual: este comando pasa en verde)
 - Lint / formato: `(completar)`
 
 ## Convenciones
 
-- (completar: estilo de código, nombres, estructura de carpetas, formato de commits)
+- Español rioplatense (voseo) en código, comentarios, interfaz y documentos.
+- Mismo origen que CSweb y el hub (`https://santiagopostacchini.github.io`): toda clave de almacenamiento lleva el
+  prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`.
+- `juego.json` en la raíz del sitio, según el contrato de HubJuegos (ver [PROMPT.md](PROMPT.md)).
+- Pruebas entre pestañas con `?perfil=<nombre>` y del relay con `?relay=1`.
 
 ## Zonas que no se tocan
 
-- (completar: carpetas generadas, `vendor/`, migraciones ya aplicadas, archivos con secretos o configuración de producción)
+- Archivos de id Software: nunca se commitean ni se publican (shareware incluido, salvo aprobación explícita).
+- Otros repos (CSweb, HubJuegos) y el Worker TURN de CSweb: sólo con aprobación del usuario.
+- `vendor/` (binarios del motor, si se versionan): sólo se actualizan a propósito y documentando la versión.
 
 ## Flujo de trabajo
 
