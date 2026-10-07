@@ -30,6 +30,7 @@ exportan con `git format-patch <commit fijado>..HEAD -o ../parches/`. Codex pued
 | `0003` | Memoria inicial de 256 MB que puede crecer hasta 2 GB; elimina plantillas ausentes. | build y navegador |
 | `0004` | Nombres de funciones en las pilas de errores de wasm. | build |
 | `0006` | Oculta símbolos internos de los módulos para evitar colisiones de la GOT. | build y navegador |
+| `0007` | Atlas de fuentes en RGBA para la web: WebGL 2 no tiene `GL_TEXTURE_SWIZZLE` y el atlas `GL_R8` dibujaba cada letra dentro de una caja negra. | build |
 
 Se retiró `0005`: era diagnóstico temporal y salteaba `Z_Free` ante configstrings NULL. La corrección conserva
 los controles originales del motor. El salto en la numeración mantiene la referencia del parche de aislamiento.
