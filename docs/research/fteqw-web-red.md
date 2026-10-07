@@ -129,6 +129,23 @@ Comparación rápida con Quake 1 + FTEQW:
 | Datos libres | LibreQuake, shareware | demo, OpenArena |
 | Emscripten | 2.0.12 (CI de FTE) | 3.1.58 (CI del fork) |
 
+## Contenido de Quake Live (copia del usuario, 2026-10-07, sólo lectura de los zips)
+
+Instalación de Steam en `C:\Program Files (x86)\Steam\steamapps\common\Quake Live` (build 1168251). Modelo igual al de CSweb: el
+contenido lo pone quien tiene el juego.
+
+- `baseq3/bin.pk3` (1,4 MB) trae la **lógica del juego como DLL/.so nativas** (`qagamex86.dll`, `cgamex86.dll`,
+  `uix86.dll`, `qagamei386.so`, `qagamex64.so`). Código nativo de x86: no corre en WebAssembly. Para jugar con las reglas
+  de Quake Live en el navegador hay que reescribir esa lógica (sobre el código GPL de Quake 3) o hacerle ingeniería
+  inversa a las DLL.
+- `baseq3/pak00.pk3` (962 MB comprimido, 9285 entradas): 149 mapas `.bsp`, 3768 `.jpg`, 497 `.tga`, 1819 `.png`, 462 `.md3`,
+  146 `.shader`, 149 `.aas` (navegación de bots). Formatos conocidos de Quake 3.
+- **Los 149 mapas son IBSP versión 47**. ioquake3 sólo acepta la 46 (`BSP_VERSION` en `qfiles.h:316`; la rechazan
+  `cm_load.c:629` y `tr_bsp.c:1840`). Hay que parchear el cargador y no sé qué cambia entre 46 y 47.
+- El `EULA.txt` de esa carpeta **no es de Steam** (se creó a las 15:04:20, 9 minutos después de la última
+  actualización de Steam, 14:55:26) y concede libertades que no coinciden con ningún EULA de id que conozca. Sin
+  verificar contra el oficial, no se toma como autorización para hacer ingeniería inversa de las DLL.
+
 ## Lo que no está verificado
 
 - Que el build web actual compile con emsdk 2.0.12 y con uno más nuevo.
