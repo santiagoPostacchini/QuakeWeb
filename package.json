@@ -8,7 +8,8 @@
     "typecheck": "tsc --noEmit -p .",
     "dev": "vite --config vite.config.ts",
     "build": "vite build --config vite.config.ts",
-    "preview": "vite preview --config vite.config.ts"
+    "preview": "vite preview --config vite.config.ts",
+    "motor": "node motor/ql/herramientas/bajar-motor.mjs"
   },
   "dependencies": {
     "flatbuffers": "^25.9.23",
