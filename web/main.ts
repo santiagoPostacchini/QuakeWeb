@@ -221,7 +221,7 @@ $('host-btn').addEventListener('click', async () => {
         sala = entrarSala(codigo, await ice, { servidor: opciones.servidor, mapa, modo: opciones.modo,
             max: opciones.jugadoresMax, jugadores: 1, huella: huellaPak(pak00.size, entradas) }, mostrarInfo,
             texto => { toast(texto); diagnostico(); });
-        $('invite-link').textContent = `${location.href.split('#')[0]}#${codigo}`;
+        $('invite-link').textContent = `${location.origin}${location.pathname}#${codigo}`; // sin ?perfil (es sólo para probar)
         await iniciar(opciones);
     } catch (causa) { error((causa as Error).message); }
     finally { creando = false; ($('host-btn') as HTMLButtonElement).disabled = motorDetenido || activo(); }
