@@ -1,27 +1,60 @@
 // Entrada de la página: vistas del lobby, carpeta de Quake Live (logo, fuentes y mapas del pak00.pk3 local).
-// El anfitrión juega localmente; unirse se suma con la red (T-002).
+// La página transporta la señalización; HumbleNet mantiene la red del juego.
 import { leerDirectorio, type EntradaZip } from './zip.ts';
 import { aplicarMarca } from './marca.ts';
 import { arrancarMotor } from './motor.ts';
 import { archivoGuardado } from './archivos.ts';
 import { sanearCvar } from './argumentos.ts';
 import { prepararAtajos, permitirSalida } from './atajos.ts';
+import { generarCodigo, huellaPak } from './red-util.ts';
+import { entrarSala, prepararIce, type InfoPartida } from './sala.ts';
+import type { OpcionesPartida } from './argumentos.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
 // ---- vista según el link (…/QuakeWeb/#CODIGO, 6 caracteres de ABCDEFGHJKMNPQRSTUVWXYZ23456789) ----
 const CODIGO = /^#([ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6})$/i;
+let sala: ReturnType<typeof entrarSala> | undefined;
+let busqueda = 0;
+let motor: Awaited<ReturnType<typeof arrancarMotor>> | undefined;
+const ice = prepararIce(import.meta.env.VITE_TURN_ENDPOINT);
+function diagnostico(log = motor?.diagnostico() ?? '') {
+    $('diag-text').textContent = `${sala?.diagnostico() ?? 'Sin sala'}\n${log}`;
+    $('diag').hidden = false;
+}
+function mostrarInfo(info: InfoPartida | null) {
+    $('host-online').hidden = !info;
+    $('host-online').classList.toggle('on', !!info);
+    $('join-hostname').textContent = info?.servidor ?? 'buscando…';
+    $('join-map').textContent = info ? `${info.mapa} · ${MODOS.find(([v]) => Number(v) === info.modo)?.[1] ?? info.modo}` : '—';
+    $('join-players').textContent = info ? `${info.jugadores} / ${info.max}` : '—';
+    $('invite-players').textContent = `${info?.jugadores ?? 1} jugador${info?.jugadores === 1 ? '' : 'es'}`;
+    $('join-hint').textContent = info ? 'Elegí tu carpeta Quake Live y uníte con tus propios archivos.' : 'Buscando al anfitrión…';
+    diagnostico();
+}
+async function buscar(codigo: string | null) {
+    const turno = ++busqueda;
+    const vieja = sala; sala = undefined;
+    await vieja?.salir();
+    if (!codigo) return;
+    const servidores = await ice;
+    if (turno !== busqueda) return;
+    try {
+        sala = entrarSala(codigo, servidores, null, mostrarInfo, texto => { $('join-hint').textContent = texto; diagnostico(); });
+        diagnostico();
+    } catch (causa) { error((causa as Error).message); }
+}
 function mostrarVista() {
+    if (activo() || creando) return;
     const m = CODIGO.exec(location.hash);
     $('join-view').hidden = !m;
     $('home-view').hidden = !!m;
     $('host-options').hidden = !!m;
     if (m) {
         $('join-code').textContent = m[1].toUpperCase();
-        $('join-hostname').textContent = 'todavía sin red';
-        $('host-online').hidden = true;
-        $('join-hint').textContent = 'Unirse por código o link llega con la red. Por ahora podés crear una partida local.';
+        mostrarInfo(null);
     }
+    void buscar(m ? m[1].toUpperCase() : null);
 }
 addEventListener('hashchange', mostrarVista);
 $('go-home').addEventListener('click', (e) => { e.preventDefault(); history.replaceState(null, '', location.pathname + location.search); mostrarVista(); });
@@ -105,8 +138,6 @@ if (import.meta.env.DEV) {
     };
 }
 
-mostrarVista();
-
 async function guardarPak(archivo: Blob) {
     try { await archivoGuardado(archivo); }
     catch (causa) {
@@ -126,6 +157,7 @@ void archivoGuardado().then(async archivo => {
 
 let arrancando = false;
 let motorDetenido = false;
+let creando = false;
 const canvas = $('canvas') as HTMLCanvasElement;
 const activo = () => arrancando || document.body.classList.contains('playing');
 const pedirPantallaCompleta = prepararAtajos(canvas, $('fullscreen') as HTMLInputElement, activo, toast);
@@ -139,8 +171,10 @@ function mostrarFalla(causa: string, diagnostico: string) {
     document.exitPointerLock();
     if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
     error(`${causa} Recargá la página para volver a intentar.`);
-    $('diag-text').textContent = diagnostico;
+    $('invite').hidden = true;
+    $('diag-text').textContent = `${sala?.diagnostico() ?? 'Sin sala'}\n${diagnostico}`;
     $('diag').hidden = false;
+    void sala?.salir();
     ($('host-btn') as HTMLButtonElement).disabled = true;
 }
 
@@ -149,13 +183,53 @@ $('diag-copy').addEventListener('click', () => {
         () => toast('Diagnóstico copiado'),
         () => toast('No se pudo copiar. Seleccioná el texto del diagnóstico y copialo.'));
 });
-$('join-btn').addEventListener('click', () => error('Unirse por código o link llega con la red. Por ahora podés crear una partida local.'));
+$('join-btn').addEventListener('click', () => {
+    if (activo() || motorDetenido) return;
+    if (!pak00 || !entradas) { selectorCarpeta.click(); $('join-hint').textContent = 'Elegí la carpeta Quake Live; después apretá Unirse.'; return; }
+    const info = sala?.info();
+    if (!info) { error('Todavía no se encontró al anfitrión. Esperá el resultado de la búsqueda.'); return; }
+    if (huellaPak(pak00.size, entradas) !== info.huella) {
+        error('Tu pak00.pk3 no coincide con el del anfitrión. Usen la misma versión de Quake Live y elegí de nuevo la carpeta.'); return;
+    }
+    void iniciar({ mapa: info.mapa, modo: info.modo, jugadoresMax: info.max, servidor: info.servidor,
+        jugador: nombre.value.trim(), red: { codigo: sala!.codigo, invitado: true } });
+});
+
+$('invite-copy').addEventListener('click', () => {
+    void navigator.clipboard.writeText($('invite-link').textContent ?? '').then(() => toast('Link copiado'), () => toast('No se pudo copiar el link. Seleccionalo y copialo.'));
+});
+$('diag').addEventListener('toggle', () => { if (($('diag') as HTMLDetailsElement).open) diagnostico(); });
 
 $('host-btn').addEventListener('click', async () => {
-    if (arrancando || motorDetenido || document.body.classList.contains('playing')) return;
+    if (creando || arrancando || motorDetenido || document.body.classList.contains('playing')) return;
     if (!sanearCvar(nombre.value).trim()) { error('Escribí tu nombre para jugar.'); nombre.focus(); return; }
     const mapa = ($('map') as HTMLSelectElement).value;
     if (!pak00 || !entradas?.has(`maps/${mapa.toLowerCase()}.bsp`)) { error('Elegí la carpeta Quake Live y un mapa válido.'); return; }
+    creando = true;
+    ($('host-btn') as HTMLButtonElement).disabled = true;
+    void pedirPantallaCompleta();
+    ++busqueda;
+    const codigo = generarCodigo();
+    const opciones: OpcionesPartida = {
+        mapa, modo: Number(($('gametype') as HTMLSelectElement).value),
+        jugadoresMax: Number(($('max-players') as HTMLSelectElement).value),
+        servidor: ($('hostname') as HTMLInputElement).value, jugador: nombre.value.trim(),
+        red: { codigo, invitado: false },
+    };
+    try {
+        await sala?.salir();
+        sala = entrarSala(codigo, await ice, { servidor: opciones.servidor, mapa, modo: opciones.modo,
+            max: opciones.jugadoresMax, jugadores: 1, huella: huellaPak(pak00.size, entradas) }, mostrarInfo,
+            texto => { toast(texto); diagnostico(); });
+        $('invite-link').textContent = `${location.origin}${location.pathname}#${codigo}`; // sin ?perfil (es sólo para probar)
+        await iniciar(opciones);
+    } catch (causa) { error((causa as Error).message); }
+    finally { creando = false; ($('host-btn') as HTMLButtonElement).disabled = motorDetenido || activo(); }
+});
+
+async function iniciar(opciones: OpcionesPartida) {
+    if (activo() || motorDetenido || !pak00) return;
+    if (!sanearCvar(nombre.value).trim()) { error('Escribí tu nombre para jugar.'); nombre.focus(); return; }
     arrancando = true;
     error('');
     $('diag').hidden = true;
@@ -165,11 +239,8 @@ $('host-btn').addEventListener('click', async () => {
     // Se pide dentro del click, antes de perder el gesto del usuario por la lectura del pak.
     void pedirPantallaCompleta();
     try {
-        await arrancarMotor(pak00, {
-            mapa, modo: Number(($('gametype') as HTMLSelectElement).value),
-            jugadoresMax: Number(($('max-players') as HTMLSelectElement).value),
-            servidor: ($('hostname') as HTMLInputElement).value, jugador: nombre.value.trim(),
-        }, canvas, {
+        sala!.instalar();
+        motor = await arrancarMotor(pak00, opciones, canvas, {
             progreso: (texto, detalle = '', fraccion) => {
                 $('loading-text').textContent = texto;
                 $('loading-detail').textContent = detalle;
@@ -177,6 +248,7 @@ $('host-btn').addEventListener('click', async () => {
                 $('bar').style.width = fraccion === undefined ? '' : `${Math.max(0, Math.min(1, fraccion)) * 100}%`;
             },
             error: mostrarFalla,
+            log: diagnostico,
             salir: () => {
                 if (confirm('¿Salir de la partida?')) { permitirSalida(); location.reload(); }
             },
@@ -184,7 +256,13 @@ $('host-btn').addEventListener('click', async () => {
         arrancando = false;
         $('loading').hidden = true;
         document.body.classList.add('playing');
+        sala?.jugando();
+        $('invite').hidden = !!opciones.red?.invitado;
         canvas.focus();
         toast('Hacé click para capturar el mouse · Esc menú · ~ consola');
-    } catch { /* el motor informa la causa y el diagnóstico con mostrarFalla */ }
-});
+    } catch (causa) {
+        if (!motorDetenido) mostrarFalla(`Se encontró la partida pero no conecta: ${(causa as Error).message}`, '');
+    }
+}
+
+mostrarVista();

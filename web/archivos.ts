@@ -1,7 +1,8 @@
 // Guardamos el Blob tal cual: ni base64 ni una copia del pak entero en un ArrayBuffer.
 export async function archivoGuardado(archivo?: Blob): Promise<Blob | undefined> {
     const base = await new Promise<IDBDatabase>((resolver, rechazar) => {
-        const pedido = indexedDB.open('quakeweb-archivos', 1);
+        const perfil = new URLSearchParams(location.search).get('perfil');
+        const pedido = indexedDB.open(`quakeweb-archivos${perfil ? `-${encodeURIComponent(perfil)}` : ''}`, 1);
         pedido.onupgradeneeded = () => pedido.result.createObjectStore('quakeweb-paks');
         pedido.onsuccess = () => {
             pedido.result.onversionchange = () => pedido.result.close();

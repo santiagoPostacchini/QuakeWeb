@@ -16,6 +16,7 @@ type Avisos = {
     progreso(texto: string, detalle?: string, fraccion?: number): void;
     error(causa: string, diagnostico: string): void;
     salir(): void;
+    log?(texto: string): void;
 };
 
 async function bajar(url: string, progreso?: (bytes: number, total: number) => void): Promise<Uint8Array<ArrayBuffer>> {
@@ -60,6 +61,7 @@ export async function arrancarMotor(pak: Blob, opciones: OpcionesPartida, canvas
     const anotar = (texto: string) => {
         lineas.push(...texto.split(/\r?\n/));
         lineas.splice(0, Math.max(0, lineas.length - 120));
+        avisos.log?.(lineas.join('\n'));
     };
     const fallar = (causa: unknown) => {
         if (detenido) return;
@@ -123,7 +125,9 @@ export async function arrancarMotor(pak: Blob, opciones: OpcionesPartida, canvas
         window.addEventListener('error', errorGlobal);
         window.addEventListener('unhandledrejection', rechazoGlobal);
         document.addEventListener('visibilitychange', visibilidad);
-        espera = window.setTimeout(() => fallar('El mapa no terminó de cargar en 120 segundos.'), 120000);
+        espera = window.setTimeout(() => fallar(opciones.red?.invitado
+            ? 'Se encontró la partida pero no conecta: el motor no entró en 120 segundos. Revisá los servidores ICE y la red.'
+            : 'El mapa no terminó de cargar en 120 segundos.'), 120000);
         const iniciado = fabrica.default({
             canvas, arguments: argumentos, wasmBinary: wasm,
             locateFile: (archivo: string) => `${url}${archivo}`,
