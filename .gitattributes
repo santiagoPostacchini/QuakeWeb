@@ -1,0 +1,2 @@
+# Los parches del motor se aplican con git apply: siempre con fin de línea LF
+*.patch text eol=lf
