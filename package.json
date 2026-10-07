@@ -12,7 +12,10 @@
     "motor": "node motor/ql/herramientas/bajar-motor.mjs"
   },
   "dependencies": {
+    "@trystero-p2p/nostr": "^0.25.4",
+    "@trystero-p2p/torrent": "^0.25.4",
     "flatbuffers": "^25.9.23",
+    "trystero": "^0.25.4",
     "ws": "^8.22.0"
   },
   "devDependencies": {
