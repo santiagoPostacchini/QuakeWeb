@@ -76,6 +76,16 @@ jobs:
           set -o pipefail
           emmake make release BUILD_GAME_SO=1 -k -j"$(nproc)" 2>&1 | tee ../modulos.log
 
+      # Los módulos de juego traen la bss como megas de ceros (cgame: 13 MB, 58 KB útiles) y Chrome no deja
+      # compilar ni instanciar en forma sincrónica (dlopen) un wasm de más de 8 MB. Se recortan los ceros finales
+      # (el cargador de Emscripten pone en cero esa memoria) y se rearma iobin.pk3.
+      - name: Recortar ceros de los módulos de juego y rearmar iobin.pk3
+        run: |
+          cd ioql/build/release-emscripten-wasm32/baseq3
+          node ../../../../motor/ql/herramientas/recortar-ceros.mjs cgamewasm32.wasm qagamewasm32.wasm uiwasm32.wasm
+          rm -f iobin.pk3
+          zip -j9 iobin.pk3 cgamewasm32.wasm qagamewasm32.wasm uiwasm32.wasm
+
       - name: Resumen
         if: always()
         run: |

@@ -16,6 +16,7 @@
 </head>
 <body>
 <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+<script src="/latido.js"></script>
 <pre id="registro">Cargando…  (F2 muestra u oculta este registro)</pre>
 <script type="module">
 // Prueba del port de ioquakelive (D-006): motor + lógica de juego de QL como módulos wasm (iobin.pk3) y
@@ -62,13 +63,24 @@ const argumentos = [
 for (let i = 0; i < bots; i++) argumentos.push('+addbot', 'sarge', '2');
 anotar(`argumentos: ${argumentos.join(' ')}`);
 
+// Los módulos de juego (iobin.pk3) vienen sin los ceros finales (motor/ql/herramientas/recortar-ceros.mjs):
+// pesan menos de 1 MB, así que dlopen puede compilarlos en el hilo principal (Chrome lo limita a 8 MB).
+Error.stackTraceLimit = 60;
+
 const quakelive = (await import('/motor-ql/quakelive.wasm32.js')).default;
 quakelive({
     canvas: document.getElementById('canvas'),
     arguments: argumentos,
     locateFile: (archivo) => `/motor-ql/${archivo}`,
     print: (s) => anotar(s),
-    printErr: (s) => anotar(`! ${s}`),
+    printErr: (s) => {
+        anotar(`! ${s}`);
+        // Diagnóstico: pila de llamadas cuando el motor reporta un error grave
+        if (/^ERROR:|Z_Free: NULL/.test(s)) {
+            const pila = (new Error().stack ?? '').split('\n').slice(2, 30).map(x => x.trim()).join('\n    ');
+            anotar(`PILA:\n    ${pila}`);
+        }
+    },
     onAbort: (que) => anotar(`MOTOR ABORTADO: ${que}`),
     preRun: [async (modulo) => {
         modulo.addRunDependency('quakeweb-archivos');

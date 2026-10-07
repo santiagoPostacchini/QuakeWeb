@@ -16,6 +16,7 @@
 </head>
 <body>
 <canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+<script src="/latido.js"></script>
 <pre id="registro">Cargando…  (F2 muestra u oculta este registro)</pre>
 <script type="module">
 // Prueba de T-007: arranca el motor directo en un mapa de Quake Live (BSP 47) con la lógica de juego GPL
@@ -52,13 +53,23 @@ const archivos = Promise.all([
     ...QVM.map(n => bajar(`/motor/${logica}/vm/${n}.qvm`)),
 ]);
 
+// Multijugador (T-009): ?rol=anfitrion|invitado&sala=prueba, con el servidor de señalización local
+// (`node herramientas/senal-local.ts`, ws://127.0.0.1:5181). Sin rol, juega solo y sin red.
+const rol = params.get('rol');
+const sala = (params.get('sala') ?? 'prueba').replace(/[^a-z0-9_-]/gi, '');
+const senal = params.get('senal') ?? 'ws://127.0.0.1:5181';
 const argumentos = [
-    '+set', 'net_enabled', '0',
+    '+set', 'net_enabled', rol ? '1' : '0',
     '+set', 'r_mode', '-2',
     '+set', 'sv_pure', '0',
     '+set', 'bot_enable', bots ? '1' : '0',
-    '+devmap', mapa,
+    '+set', 'name', rol === 'invitado' ? 'Invitado' : 'Anfitrion',
 ];
+// Entre comillas: en la consola de Quake "//" empieza un comentario y la URL quedaba en "ws:".
+if (rol) argumentos.push('+set', 'net_peer_server', `"${senal}"`);
+if (rol === 'invitado') argumentos.push('+connect', `${sala}.humblenet`);
+else if (rol === 'anfitrion') argumentos.push('+set', 'net_server_name', sala, '+devmap', mapa);
+else argumentos.push('+devmap', mapa);
 for (let i = 0; i < bots; i++) argumentos.push('+addbot', 'sarge', '2');
 anotar(`argumentos: ${argumentos.join(' ')}`);
 
