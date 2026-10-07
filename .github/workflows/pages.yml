@@ -1,0 +1,99 @@
+# Publica la página en GitHub Pages (https://santiagopostacchini.github.io/QuakeWeb/) con el motor del último build
+# exitoso de "Motor Quake Live web". Nunca publica archivos de id Software: de pak01.pk3 (contenido del repo de
+# ioquakelive) sólo van los textos (.menu y .shader); sus modelos, texturas y sonidos no tienen licencia clara.
+name: Pages
+
+on:
+  push:
+    branches: [exploracion-motor]
+    paths:
+      - 'web/**'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'vite.config.ts'
+      - '.github/workflows/pages.yml'
+  workflow_dispatch:
+    inputs:
+      motor:
+        description: 'Id del run de "Motor Quake Live web" (vacío: el último exitoso)'
+        required: false
+
+permissions:
+  contents: read
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tests y tipos
+        run: |
+          npm test
+          npm run typecheck
+
+      - name: Bajar el motor
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN: ${{ inputs.motor }}
+        run: |
+          if [ -z "$RUN" ]; then
+            RUN=$(gh run list -R "$GITHUB_REPOSITORY" -w motor-ql.yml -s success -b "$GITHUB_REF_NAME" -L 1 --json databaseId -q '.[0].databaseId')
+          fi
+          if [ -z "$RUN" ]; then
+            RUN=$(gh run list -R "$GITHUB_REPOSITORY" -w motor-ql.yml -s success -L 1 --json databaseId -q '.[0].databaseId')
+          fi
+          echo "Motor del run $RUN"
+          gh run download "$RUN" -R "$GITHUB_REPOSITORY" -n motor-ql-web -D motor-dl
+          origen=motor-dl/ioql/build/release-emscripten-wasm32
+          mkdir -p web/public/motor/baseq3
+          cp "$origen"/quakelive_opengl2.wasm32.js "$origen"/quakelive_opengl2.wasm32.wasm web/public/motor/
+          cp "$origen"/baseq3/iobin.pk3 web/public/motor/baseq3/
+
+      - name: pak01 sólo con textos
+        run: |
+          origen=motor-dl/ioql/build/release-emscripten-wasm32/baseq3/pak01.pk3
+          mkdir pak01 && unzip -q "$origen" -d pak01
+          (cd pak01 && find . -type f \( -name '*.menu' -o -name '*.shader' \) | sed 's#^\./##' | zip -q -9 -@ ../web/public/motor/baseq3/pak01.pk3)
+          unzip -Z1 web/public/motor/baseq3/pak01.pk3
+          if unzip -Z1 web/public/motor/baseq3/pak01.pk3 | grep -vE '\.(menu|shader)$'; then
+            echo "pak01.pk3 tiene archivos que no son texto" >&2; exit 1
+          fi
+
+      - run: npm run build
+
+      - name: Revisar que no se publique nada de id Software
+        run: |
+          find dist -type f | sort
+          if find dist -type f \( -iname 'pak00*' -o -iname '*.bsp' -o -iname '*.md3' -o -iname '*.tga' -o -iname '*.ttf' -o -iname '*.ogg' -o -iname '*.wav' \) | grep .; then
+            echo "dist tiene archivos que no se publican" >&2; exit 1
+          fi
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4
