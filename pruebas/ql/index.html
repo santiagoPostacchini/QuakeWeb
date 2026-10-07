@@ -83,6 +83,7 @@ quakelive({
     },
     onAbort: (que) => anotar(`MOTOR ABORTADO: ${que}`),
     preRun: [async (modulo) => {
+        window.qlModulo = modulo; // diagnóstico desde la consola
         modulo.addRunDependency('quakeweb-archivos');
         try {
             const [pak00, iobin, pak01] = await archivos;
