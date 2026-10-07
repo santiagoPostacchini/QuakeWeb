@@ -19,11 +19,19 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
 
 ### T-001: Etapa 0, exploración del motor y de la red
 - Responsable: claude
-- Estado: pendiente
+- Estado: en curso
 - Rama: exploracion-motor
 - Aceptación: dos pestañas juegan un deathmatch local con FTEQW (u otro motor justificado); la elección entre la
   red nativa del motor y la de CSweb queda escrita en `ARCHITECTURE.md` (D-004) y aprobada por el usuario.
-- Hallazgos:
+- Hallazgos (2026-10-07, lectura de código; todavía no se compiló ni se corrió nada):
+  - Hecho: lectura de CSweb (`HANDOFF.md`, `PLAN-ONLINE.md`, `p2pnet.ts`, `engine.ts`) y del port web de FTEQW
+    (`engine/web/`, `net_wins.c`, `net_ice.c`). Notas en [docs/research/fteqw-web-red.md](docs/research/fteqw-web-red.md).
+  - El broker de FTE es un WebSocket binario simple; propuesta A2 (broker virtual + Trystero) en D-004.
+  - El motor guarda en `localStorage` y en la Cache API `user` **sin prefijo**: hay que parchearlo (origen
+    compartido con CSweb).
+  - No hay build web reciente: el último es de 2022. Hay que compilar (emsdk 2.0.12 en Ubuntu, como la CI de FTE).
+  - Bloqueado: no hay Quake instalado en las rutas habituales de esta PC y no hay `emcc`/`make`/Docker/WSL.
+  - Pendiente: build del motor, dos pestañas en deathmatch, prueba de relay y aprobación del usuario.
 
 ### T-002: Etapa 1, crear y unirse
 - Responsable: claude

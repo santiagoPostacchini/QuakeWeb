@@ -40,9 +40,17 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
 - Alternativas descartadas: dominio propio (costo y configuración extra sin beneficio por ahora).
 - Estado: vigente
 
-### D-004: Motor y camino de red (pendiente de la etapa 0)
+### D-004: Motor y camino de red (borrador de la etapa 0)
 
 - Contexto: FTEQW trae servidor en el navegador y WebRTC con broker; la red de CSweb (Trystero + relay propio) ya
-  está probada entre redes.
-- Decisión: (completar en la etapa 0, con el usuario)
+  está probada entre redes. Detalle de lo leído en el código: [docs/research/fteqw-web-red.md](docs/research/fteqw-web-red.md).
+- Propuesta (sin aprobar, sin probar): **motor FTEQW; red nativa del motor (A) con un "broker virtual" dentro de la
+  página (A2)** que habla el protocolo binario del broker de FTE y lo conecta con la señalización de CSweb
+  (Trystero) y el Worker TURN de CSweb. Un solo sistema de señalización para sala, código, juego y archivos.
+- Razón: el motor ya maneja un `RTCPeerConnection` por cliente con DataChannel no confiable (igual al canal `game`
+  de CSweb) y recibe servidores TURN por la cvar `net_ice_servers`; el broker son ~150 líneas y no hay que tocar el
+  C del motor. Evita depender del broker de terceros (`master.frag-net.com`).
+- Alternativas: **A1** broker propio en la nube (Worker + Durable Object); **B** red de CSweb inyectada al motor
+  (más trabajo, mejor diagnóstico).
+- Condición para aprobarla: compilar el motor, dos pestañas en un deathmatch y la prueba del relay.
 - Estado: pendiente

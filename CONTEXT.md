@@ -19,7 +19,10 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 
 - Español rioplatense (voseo) en código, comentarios, interfaz y documentos.
 - Mismo origen que CSweb y CiberWeb (`https://santiagopostacchini.github.io`): toda clave de almacenamiento lleva
-  el prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`.
+  el prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`. **El motor FTEQW no
+  lo respeta de fábrica** (usa `localStorage` con el nombre del archivo y la cache `user`): hay que parchearlo en
+  `ftejslib.js`/`prejs.js` antes de publicar (ver [docs/research/fteqw-web-red.md](docs/research/fteqw-web-red.md)).
+- No tocar otros repos ni sus ramas por accidente: los comandos de Git se ejecutan siempre con `-C C:\dev\QuakeWeb`.
 - Link para unirse estable: `…/QuakeWeb/#CODIGO` (CiberWeb lo usa; ver [PROMPT.md](PROMPT.md)).
 - Pruebas entre pestañas con `?perfil=<nombre>` y del relay con `?relay=1`.
 
