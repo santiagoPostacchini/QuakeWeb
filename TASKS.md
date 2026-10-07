@@ -103,3 +103,24 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
 - Rama:
 - Aceptación: números antes/después del arranque y del frame en este archivo, y capturas de todas las pantallas.
 - Hallazgos:
+
+### T-008: Que se juegue como Quake Live
+- Responsable: claude (investigación: gemini)
+- Estado: pendiente
+- Rama:
+- Aceptación: la meta final del proyecto es correr Quake Live en el navegador. Con el contenido de QL ya cargando
+  (T-007), falta su jugabilidad: física de movimiento, armas, armadura e ítems, modos (Duel, FFA, TDM, CA, CTF), HUD,
+  mira y menús. Se reescribe sobre el código GPL de Quake 3 (`code/game`, `code/cgame`, `bg_pmove.c`) como parches en
+  `motor/parches/`, con valores tomados de fuentes públicas y anotados con su fuente. Criterio por etapa: una tabla
+  "Quake Live vs QuakeWeb" en este archivo con cada regla medida en el juego.
+- Hallazgos: investigación encargada a Gemini (`docs/research/quake-live-reglas.md`). La ingeniería inversa de las
+  DLL de QL sigue descartada hasta confirmar el EULA oficial.
+
+### T-009: Señalización de HumbleNet propia (dos pestañas)
+- Responsable: claude (especificación: subagente Haiku; implementación: codex)
+- Estado: en curso
+- Rama: exploracion-motor (implementación en `codex/…`)
+- Aceptación: un servidor de señalización propio, compatible con HumbleNet, deja que dos pestañas en esta PC jueguen
+  un deathmatch en un mapa de QL (anfitrión con `net_server_name`, invitado con `connect X.humblenet`). La lógica de
+  sala no depende del transporte, para reutilizarla después dentro de la página sobre Trystero (D-005).
+- Hallazgos: especificación en `docs/research/humblenet-senalizacion.md` (en preparación).

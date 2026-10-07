@@ -53,6 +53,8 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
   QuakeWeb; los mapas de Quake Live (BSP 47) tienen la misma estructura que los de Quake 3 más una sección.
 - Alternativas descartadas: Quake 1 con FTEQW (red nativa más simple, pero lejos de Quake Live); ingeniería inversa
   de las DLL de Quake Live (trabajo grande y sin confirmar que el EULA oficial lo permita).
+- Meta final (pedida por el usuario): **que corra Quake Live**, no sólo sus mapas. La jugabilidad de QL (física,
+  armas, modos, HUD) se reescribe sobre la lógica GPL de Quake 3 (T-008).
 - Riesgos: el fork lo mantiene una sola persona; las reglas de juego de Quake Live hay que reescribirlas.
 - Estado: vigente. Reemplaza el borrador anterior de D-004 (FTEQW + broker virtual), que queda descartado.
 
