@@ -79,13 +79,18 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
   entre motor/qagame/ui. El workflow revisa la ABI y ausencia de `GOT.mem`; `campgrounds` alcanza `CA_ACTIVE`
   y el jugador puede entrar y moverse con el menú/HUD de ioquakelive. Red de este motor todavía pendiente.
 
-### D-005: Camino de red (borrador, pendiente de la etapa 0)
+### D-005: Camino de red: HumbleNet con señalización virtual en la página (2026-10-07)
 
-- Contexto: el fork usa HumbleNet, con un "peer server" de señalización propio (C++/FlatBuffers) que también reparte
-  los servidores TURN. CSweb usa Trystero + `Link` propio + Worker TURN, ya probado entre redes.
-- Propuesta (sin aprobar, sin probar): dejar la red del motor (DataChannels de HumbleNet) y reemplazar el peer server
-  por uno **virtual dentro de la página** que lo conecte con la señalización de CSweb (Trystero) y el Worker TURN,
-  como hizo `WofWca/quake3.xdc` con otro transporte. Una sola señalización para sala, código, juego y archivos.
-- Alternativas: peer server propio en una VM (no corre en un Worker); red de CSweb inyectada en el motor.
-- Condición para aprobarla: dos pestañas en un deathmatch y la prueba del relay.
-- Estado: pendiente
+- Contexto: el fork web de ioq3 usa HumbleNet, con un "peer server" de señalización propio (C++/FlatBuffers) que
+  también reparte los servidores ICE. CSweb usa Trystero, ya probado entre redes.
+- Decisión: el motor conserva la red de HumbleNet (parche 0009, DataChannels de WebRTC) y el peer server corre
+  **dentro de la página del anfitrión** (`src/senal/servidor.ts`). Un WebSocket falso (`web/socket-senal.ts`) lo
+  conecta con el motor; los frames de los invitados viajan por Trystero (Nostr + torrent, sala = código). No hay
+  servidor propio.
+- ICE: STUN públicos; TURN sólo si el build define `VITE_TURN_ENDPOINT` (hoy no). Los archivos del juego nunca pasan
+  por un relay TURN (ver T-012): el cupo gratis de Cloudflare (1000 GB/mes) parece ser por cuenta y se comparte.
+- Alternativas descartadas: peer server en una VM (costo y mantenimiento); red de CSweb inyectada en el motor
+  (reescribir el transporte de ioquakelive).
+- Validación: dos pestañas con ioquakelive, el anfitrión ve `Invitado connected` por WebRTC (2026-10-07). Falta la
+  prueba entre redes y la del relay.
+- Estado: aprobada

@@ -32,6 +32,7 @@ exportan con `git format-patch <commit fijado>..HEAD -o ../parches/`. Codex pued
 | `0006` | Oculta símbolos internos de los módulos para evitar colisiones de la GOT. | build y navegador |
 | `0007` | Atlas de fuentes en RGBA para la web: WebGL 2 no tiene `GL_TEXTURE_SWIZZLE` y el atlas `GL_R8` dibujaba cada letra dentro de una caja negra. | build |
 | `0008` | El marcador no suelta las teclas: al abrirlo, cgame levanta `KEYCATCH_SCORES` y `Key_SetCatcher` llamaba a `Key_ClearStates`, que mandaba `-scores` y lo cerraba con Tab mantenido. Falla también del ioquakelive nativo. | build |
+| `0009` | Red HumbleNet (WebRTC, BSD-3) traída del fork web de ioquake3: `net_peer_server` (señalización) y `net_server_name` (sala); el invitado entra con `connect SALA.humblenet`. Sin `-lc++` explícito: `MAIN_MODULE=1` ya enlaza libc++. | build y navegador |
 
 Se retiró `0005`: era diagnóstico temporal y salteaba `Z_Free` ante configstrings NULL. La corrección conserva
 los controles originales del motor. El salto en la numeración mantiene la referencia del parche de aislamiento.
