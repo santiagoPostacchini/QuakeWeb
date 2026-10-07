@@ -1,7 +1,11 @@
 // Entrada de la página: vistas del lobby, carpeta de Quake Live (logo, fuentes y mapas del pak00.pk3 local).
-// La red y el arranque del motor se suman en los pasos siguientes (T-002).
+// El anfitrión juega localmente; unirse se suma con la red (T-002).
 import { leerDirectorio, type EntradaZip } from './zip.ts';
 import { aplicarMarca } from './marca.ts';
+import { arrancarMotor } from './motor.ts';
+import { archivoGuardado } from './archivos.ts';
+import { sanearCvar } from './argumentos.ts';
+import { prepararAtajos, permitirSalida } from './atajos.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
@@ -12,7 +16,12 @@ function mostrarVista() {
     $('join-view').hidden = !m;
     $('home-view').hidden = !!m;
     $('host-options').hidden = !!m;
-    if (m) $('join-code').textContent = m[1].toUpperCase();
+    if (m) {
+        $('join-code').textContent = m[1].toUpperCase();
+        $('join-hostname').textContent = 'todavía sin red';
+        $('host-online').hidden = true;
+        $('join-hint').textContent = 'Unirse por código o link llega con la red. Por ahora podés crear una partida local.';
+    }
 }
 addEventListener('hashchange', mostrarVista);
 $('go-home').addEventListener('click', (e) => { e.preventDefault(); history.replaceState(null, '', location.pathname + location.search); mostrarVista(); });
@@ -67,7 +76,7 @@ async function usarPak(archivo: Blob) {
     estado.textContent = `listos · ${mapas.length} mapas`;
     estado.classList.add('ok');
     $('folder-hint').hidden = true;
-    ($('host-btn') as HTMLButtonElement).disabled = false;
+    ($('host-btn') as HTMLButtonElement).disabled = mapas.length === 0 || motorDetenido;
 }
 
 $('folder').addEventListener('change', async (ev) => {
@@ -82,6 +91,7 @@ $('folder').addEventListener('change', async (ev) => {
     try {
         await usarPak(pak);
         toast('Archivos de Quake Live listos');
+        await guardarPak(pak);
     } catch (e) {
         error(`No se pudo leer pak00.pk3: ${(e as Error).message}`);
     }
@@ -96,3 +106,85 @@ if (import.meta.env.DEV) {
 }
 
 mostrarVista();
+
+async function guardarPak(archivo: Blob) {
+    try { await archivoGuardado(archivo); }
+    catch (causa) {
+        error(causa instanceof DOMException && causa.name === 'QuotaExceededError'
+            ? 'No hay espacio para guardar pak00.pk3. Este origen comparte la cuota con CSweb. Podés jugar ahora y elegir la carpeta la próxima vez.'
+            : 'No se pudieron guardar los archivos en este navegador. Podés jugar ahora y elegir la carpeta la próxima vez.');
+    }
+}
+
+// La restauración termina antes de habilitar la selección, para no pisar una carpeta recién elegida.
+const selectorCarpeta = $('folder') as HTMLInputElement;
+selectorCarpeta.disabled = true;
+void archivoGuardado().then(async archivo => {
+    if (archivo) await usarPak(archivo);
+}).catch(() => error('No se pudieron recuperar los archivos guardados. Elegí de nuevo la carpeta Quake Live.'))
+    .finally(() => { selectorCarpeta.disabled = false; });
+
+let arrancando = false;
+let motorDetenido = false;
+const canvas = $('canvas') as HTMLCanvasElement;
+const activo = () => arrancando || document.body.classList.contains('playing');
+const pedirPantallaCompleta = prepararAtajos(canvas, $('fullscreen') as HTMLInputElement, activo, toast);
+
+function mostrarFalla(causa: string, diagnostico: string) {
+    arrancando = false;
+    motorDetenido = true;
+    document.body.classList.remove('playing');
+    $('loading').hidden = true;
+    $('lobby').hidden = false;
+    document.exitPointerLock();
+    if (document.fullscreenElement) void document.exitFullscreen().catch(() => undefined);
+    error(`${causa} Recargá la página para volver a intentar.`);
+    $('diag-text').textContent = diagnostico;
+    $('diag').hidden = false;
+    ($('host-btn') as HTMLButtonElement).disabled = true;
+}
+
+$('diag-copy').addEventListener('click', () => {
+    void navigator.clipboard.writeText($('diag-text').textContent ?? '').then(
+        () => toast('Diagnóstico copiado'),
+        () => toast('No se pudo copiar. Seleccioná el texto del diagnóstico y copialo.'));
+});
+$('join-btn').addEventListener('click', () => error('Unirse por código o link llega con la red. Por ahora podés crear una partida local.'));
+
+$('host-btn').addEventListener('click', async () => {
+    if (arrancando || motorDetenido || document.body.classList.contains('playing')) return;
+    if (!sanearCvar(nombre.value).trim()) { error('Escribí tu nombre para jugar.'); nombre.focus(); return; }
+    const mapa = ($('map') as HTMLSelectElement).value;
+    if (!pak00 || !entradas?.has(`maps/${mapa.toLowerCase()}.bsp`)) { error('Elegí la carpeta Quake Live y un mapa válido.'); return; }
+    arrancando = true;
+    error('');
+    $('diag').hidden = true;
+    ($('host-btn') as HTMLButtonElement).disabled = true;
+    $('lobby').hidden = true;
+    $('loading').hidden = false;
+    // Se pide dentro del click, antes de perder el gesto del usuario por la lectura del pak.
+    void pedirPantallaCompleta();
+    try {
+        await arrancarMotor(pak00, {
+            mapa, modo: Number(($('gametype') as HTMLSelectElement).value),
+            jugadoresMax: Number(($('max-players') as HTMLSelectElement).value),
+            servidor: ($('hostname') as HTMLInputElement).value, jugador: nombre.value.trim(),
+        }, canvas, {
+            progreso: (texto, detalle = '', fraccion) => {
+                $('loading-text').textContent = texto;
+                $('loading-detail').textContent = detalle;
+                $('bar').classList.toggle('indeterminate', fraccion === undefined);
+                $('bar').style.width = fraccion === undefined ? '' : `${Math.max(0, Math.min(1, fraccion)) * 100}%`;
+            },
+            error: mostrarFalla,
+            salir: () => {
+                if (confirm('¿Salir de la partida?')) { permitirSalida(); location.reload(); }
+            },
+        });
+        arrancando = false;
+        $('loading').hidden = true;
+        document.body.classList.add('playing');
+        canvas.focus();
+        toast('Hacé click para capturar el mouse · Esc menú · ~ consola');
+    } catch { /* el motor informa la causa y el diagnóstico con mostrarFalla */ }
+});
