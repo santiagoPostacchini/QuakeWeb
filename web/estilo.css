@@ -45,7 +45,7 @@ html, body {
     overflow: hidden;
 }
 body.playing { background: #000; }
-canvas { position: fixed; inset: 0; width: 100vw; height: 100vh; display: block; outline: none; visibility: hidden; }
+canvas { position: fixed; inset: 0; width: 100vw !important; height: 100vh !important; object-fit: contain; display: block; outline: none; visibility: hidden; }
 body.playing canvas { visibility: visible; }
 
 .panel {
@@ -61,8 +61,11 @@ body.playing canvas { visibility: visible; }
 }
 
 header { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
-/* logo original de QL (del pak00.pk3 local, ver marca.ts); sin él, el título en texto */
-.logo { display: none; flex: none; width: 260px; max-width: 100%; aspect-ratio: 4 / 1; background: var(--logo-ql) left center / contain no-repeat; }
+/* logo original de QL (del pak00.pk3 local, ver marca.ts); sin él, el título en texto.
+   Medido en ui/assets/main_menu/ql_logo.png: 512x128, alfa > 0 entre x 56..448 e y 16..113, o sea una zona visible de 393x98.
+   La caja tiene esa proporción y la imagen se escala a 512/393 del ancho de la caja, corrida 56/119 (x) y 16/30 (y) para
+   que lo visible llene la caja y arranque en el borde izquierdo (sin margen vacío). Si cambia el PNG, recalcular. */
+.logo { display: none; flex: none; width: 260px; max-width: 100%; aspect-ratio: 393 / 98; background: var(--logo-ql) 47.0588% 53.3333% / 130.2799% auto no-repeat; }
 .con-logo .logo { display: block; }
 .con-logo header h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .con-logo header { flex-direction: column; align-items: flex-start; gap: 6px; }

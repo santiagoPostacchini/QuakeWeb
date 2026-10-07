@@ -31,6 +31,7 @@ exportan con `git format-patch <commit fijado>..HEAD -o ../parches/`. Codex pued
 | `0004` | Nombres de funciones en las pilas de errores de wasm. | build |
 | `0006` | Oculta símbolos internos de los módulos para evitar colisiones de la GOT. | build y navegador |
 | `0007` | Atlas de fuentes en RGBA para la web: WebGL 2 no tiene `GL_TEXTURE_SWIZZLE` y el atlas `GL_R8` dibujaba cada letra dentro de una caja negra. | build |
+| `0008` | El marcador no suelta las teclas: al abrirlo, cgame levanta `KEYCATCH_SCORES` y `Key_SetCatcher` llamaba a `Key_ClearStates`, que mandaba `-scores` y lo cerraba con Tab mantenido. Falla también del ioquakelive nativo. | build |
 
 Se retiró `0005`: era diagnóstico temporal y salteaba `Z_Free` ante configstrings NULL. La corrección conserva
 los controles originales del motor. El salto en la numeración mantiene la referencia del parche de aislamiento.
