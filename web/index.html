@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Quake Live en el navegador: creá una partida y jugá con tus compañeros sin instalar nada.">
+    <title>Quake Live — en el navegador</title>
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <!-- instalada como app (Chrome/Edge), la página puede bloquear Ctrl+W también en ventana -->
+    <link rel="manifest" href="./manifest.webmanifest">
+    <link rel="stylesheet" href="./estilo.css">
+    <script type="module" src="./main.ts"></script>
+</head>
+<body>
+<canvas id="canvas" tabindex="0" oncontextmenu="event.preventDefault()"></canvas>
+
+<main id="lobby" class="panel">
+    <header>
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+            <h1>Quake Live</h1>
+            <p class="sub">En el navegador, sin instalar nada</p>
+        </div>
+    </header>
+
+    <label class="field">Tu nombre
+        <input id="name" maxlength="31" required>
+    </label>
+
+    <!-- Unirse a una partida (link con #CODIGO) -->
+    <section id="join-view" hidden>
+        <div class="server">
+            <div class="row"><span>Partida</span><strong id="join-code">…</strong><i id="host-online" title="Anfitrión conectado"></i></div>
+            <div class="row"><span>Servidor</span><strong id="join-hostname">buscando…</strong></div>
+            <div class="row"><span>Mapa</span><strong id="join-map">…</strong></div>
+            <div class="row"><span>Jugadores</span><strong id="join-players">…</strong></div>
+        </div>
+        <button id="join-btn" type="button">Unirse</button>
+        <p id="join-hint" class="hint"></p>
+        <p class="hint"><a href="#" id="go-home">Crear mi propia partida</a></p>
+    </section>
+
+    <!-- Inicio: unirse con un código o crear una partida -->
+    <section id="home-view" hidden>
+        <fieldset class="group">
+            <legend>Unirse a una partida</legend>
+            <form id="code-form" class="inline">
+                <input id="code" placeholder="Código (ej. K7Q2MX)" maxlength="12" autocomplete="off">
+                <button type="submit">Unirse</button>
+            </form>
+        </fieldset>
+
+        <div class="divider"><span>o creá la tuya</span></div>
+
+        <fieldset class="group">
+            <legend>Crear una partida</legend>
+            <div class="files">
+                <div class="row">
+                    <span>Archivos del juego</span>
+                    <strong id="files-status">no cargados</strong>
+                </div>
+                <label id="folder-btn" class="btn-secondary" for="folder">Elegir carpeta Quake Live…</label>
+                <input id="folder" type="file" webkitdirectory multiple hidden>
+                <p id="folder-hint" class="hint">
+                    La carpeta <b>Quake Live</b> de Steam (<code>steamapps\common\Quake Live</code>).
+                    No se sube nada a internet y queda guardada en este navegador.
+                </p>
+            </div>
+            <div class="grid2">
+                <label class="field">Mapa
+                    <select id="map"></select>
+                </label>
+                <label class="field">Modo
+                    <select id="gametype"></select>
+                </label>
+            </div>
+            <button id="host-btn" type="button" disabled>Crear partida</button>
+        </fieldset>
+    </section>
+
+    <details id="options" class="advanced">
+        <summary>Más opciones</summary>
+        <div class="checks">
+            <label class="check">
+                <input id="fullscreen" type="checkbox" checked> <span>Pantalla completa (bloquea <kbd>Ctrl</kbd>+<kbd>W</kbd> y otros atajos)</span>
+            </label>
+            <label class="check">
+                <input id="better-net" type="checkbox" checked> <span>Mejorar la conexión en la red local (pide permiso de micrófono; también sirve para el chat de voz)</span>
+            </label>
+        </div>
+        <!-- sólo al crear una partida -->
+        <div id="host-options">
+            <div class="grid2">
+                <label class="field">Jugadores máx.
+                    <select id="max-players"></select>
+                </label>
+                <label class="field">Nombre del servidor
+                    <input id="hostname" maxlength="48" value="Quake Live en el navegador">
+                </label>
+            </div>
+            <p class="hint">
+                Si la conexión directa no es posible, el tráfico pasa solo por un servidor <b>TURN</b> automático.
+                Cargá uno propio sólo si querés usar el tuyo (por ejemplo, de metered.ca).
+            </p>
+            <label class="field">URL(s) TURN
+                <input id="turn-url" placeholder="turn:servidor:3478, turns:servidor:443?transport=tcp" autocomplete="off">
+            </label>
+            <div class="grid2">
+                <label class="field">Usuario
+                    <input id="turn-user" autocomplete="off">
+                </label>
+                <label class="field">Contraseña
+                    <input id="turn-pass" type="password" autocomplete="off">
+                </label>
+            </div>
+        </div>
+    </details>
+
+    <p id="lock-hint" class="note" hidden></p>
+    <p id="error" class="error" hidden></p>
+    <details id="diag" class="diag" hidden>
+        <summary>Diagnóstico de conexión</summary>
+        <pre id="diag-text"></pre>
+        <button id="diag-copy" type="button" class="btn-secondary">Copiar diagnóstico</button>
+    </details>
+
+    <details class="help">
+        <summary>Cómo funciona / controles</summary>
+        <ul>
+            <li>El que crea la partida es el <b>anfitrión</b>: el servidor corre en su pestaña. Si la cierra, otro jugador toma la partida solo (se reinicia el mapa).</li>
+            <li>Los demás entran con el link o el código y reciben los archivos del juego de los otros jugadores la primera vez; después quedan guardados.</li>
+            <li><kbd>Click</kbd> captura el mouse · <kbd>Esc</kbd> menú · mantené <kbd>Esc</kbd> para salir de pantalla completa</li>
+            <li><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> moverse · <kbd>Espacio</kbd> saltar · <kbd>1</kbd>–<kbd>9</kbd> armas · <kbd>T</kbd> chat · <kbd>Tab</kbd> puntajes · <kbd>~</kbd> consola</li>
+        </ul>
+    </details>
+</main>
+
+<div id="loading" class="panel" hidden>
+    <p id="loading-text">Cargando…</p>
+    <div class="progress"><div id="bar" class="indeterminate"></div></div>
+    <p id="loading-detail" class="hint"></p>
+</div>
+
+<!-- Anfitrión en juego: link para invitar -->
+<div id="invite" hidden>
+    <span id="invite-players">1 jugador</span>
+    <code id="invite-link"></code>
+    <button id="invite-copy" type="button">Copiar link</button>
+    <button id="invite-handoff" type="button" hidden>Pasar anfitrión</button>
+</div>
+
+<div id="toast" role="status"></div>
+</body>
+</html>

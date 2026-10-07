@@ -5,7 +5,10 @@
   "description": "Quake Live en el navegador: partidas entre compañeros sin instalar nada",
   "scripts": {
     "test": "node --test \"test/**/*.test.ts\"",
-    "typecheck": "tsc --noEmit -p ."
+    "typecheck": "tsc --noEmit -p .",
+    "dev": "vite --config vite.config.ts",
+    "build": "vite build --config vite.config.ts",
+    "preview": "vite preview --config vite.config.ts"
   },
   "dependencies": {
     "flatbuffers": "^25.9.23",
@@ -14,6 +17,7 @@
   "devDependencies": {
     "@types/node": "^26.6.4",
     "@types/ws": "^8.18.2",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3"
   }
 }
