@@ -32,6 +32,22 @@ jobs:
           git submodule update --init --depth 1 code/libogg code/libvorbis
           git log -1 --format='%H %ad %s'
 
+      # libogg genera config_types.h al configurarse; el submódulo no lo trae. Para wasm32 alcanza con stdint.h.
+      - name: Generar ogg/config_types.h
+        run: |
+          cat > ioql/code/libogg/include/ogg/config_types.h <<'EOF'
+          #ifndef __CONFIG_TYPES_H__
+          #define __CONFIG_TYPES_H__
+          #include <stdint.h>
+          typedef int16_t ogg_int16_t;
+          typedef uint16_t ogg_uint16_t;
+          typedef int32_t ogg_int32_t;
+          typedef uint32_t ogg_uint32_t;
+          typedef int64_t ogg_int64_t;
+          typedef uint64_t ogg_uint64_t;
+          #endif
+          EOF
+
       - name: Aplicar parches de QuakeWeb
         run: |
           cd ioql
@@ -52,15 +68,7 @@ jobs:
           ./emsdk install "$EMSDK_VERSION"
           ./emsdk activate "$EMSDK_VERSION"
 
-      - name: Compilar el motor (cliente web)
-        continue-on-error: true
-        run: |
-          source emsdk/emsdk_env.sh
-          cd ioql
-          set -o pipefail
-          emmake make release -k -j"$(nproc)" 2>&1 | tee ../motor.log
-
-      - name: Compilar la lógica de juego (módulos wasm)
+      - name: Compilar el motor y la lógica de juego (módulos wasm)
         continue-on-error: true
         run: |
           source emsdk/emsdk_env.sh
@@ -71,7 +79,7 @@ jobs:
       - name: Resumen
         if: always()
         run: |
-          for f in motor.log modulos.log; do
+          for f in modulos.log; do
             echo "=== $f: $(grep -c 'error:' "$f" || true) errores"
             grep -E 'error:|undefined symbol|Error [0-9]' "$f" | sort | uniq -c | sort -rn | head -60 || true
           done
@@ -83,7 +91,6 @@ jobs:
         with:
           name: motor-ql-web
           path: |
-            motor.log
             modulos.log
             ioql/build/release-emscripten-wasm32/*.js
             ioql/build/release-emscripten-wasm32/*.wasm

@@ -9,7 +9,8 @@ submódulos `libogg` y `libvorbis`), aplica [`parches/`](parches) en orden y com
 
 ## Plan del port
 
-1. El motor compila para la web (cliente, sin red). ← en curso
+1. El motor compila para la web (cliente, sin red). ← en curso. Primera corrida: la lógica de juego ya compila a wasm
+   sin cambios; el motor sólo fallaba por `ogg/config_types.h` (lo genera el workflow).
 2. La lógica de juego (`cgame`, `qagame`, `ui`) compila como módulos wasm (`SIDE_MODULE`) y el motor los carga con
    `dlopen` (`MAIN_MODULE`). Cuidar los símbolos globales duplicados entre módulos (`-fvisibility=hidden`).
 3. Un mapa de QL corre en el navegador con las reglas de ioquakelive.
@@ -25,4 +26,4 @@ exportan con `git format-patch <commit fijado>..HEAD -o ../parches/`. Codex pued
 
 | Archivo | Qué hace | Estado |
 |---|---|---|
-| (ninguno todavía) | | |
+| `0001-Emscripten-motor-como-MAIN_MODULE-…patch` | El motor se enlaza como `MAIN_MODULE` (para `dlopen`) y la lógica de juego como `SIDE_MODULE=2` exportando sólo `dllEntry`/`vmMain` (con `SIDE_MODULE=1` `cgame` pesaba 14,3 MB). | escrito, sin probar |

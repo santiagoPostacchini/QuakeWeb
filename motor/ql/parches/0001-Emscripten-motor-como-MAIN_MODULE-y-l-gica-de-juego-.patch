@@ -1,0 +1,41 @@
+From 0eb88367b86b371ace2963e7382dfce4158b8bfc Mon Sep 17 00:00:00 2001
+From: Santiago Postacchini <postacchinisantiago@gmail.com>
+Date: Wed, 7 Oct 2026 15:51:02 -0300
+Subject: [PATCH] =?UTF-8?q?Emscripten:=20motor=20como=20MAIN=5FMODULE=20y?=
+ =?UTF-8?q?=20l=C3=B3gica=20de=20juego=20como=20SIDE=5FMODULE=3D2?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ Makefile | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index ff900a3..2f9456e 100644
+--- a/Makefile
++++ b/Makefile
+@@ -998,6 +998,8 @@ ifeq ($(PLATFORM),emscripten)
+   # The HTML file can use these functions to load extra files before the game starts.
+   CLIENT_LDFLAGS+=-s EXPORTED_RUNTIME_METHODS=FS,addRunDependency,removeRunDependency
+   CLIENT_LDFLAGS+=-s EXIT_RUNTIME=1
++  # QuakeWeb: el motor carga la lógica de juego (cgame, qagame, ui) con dlopen, como módulos wasm.
++  CLIENT_LDFLAGS+=-s MAIN_MODULE=1
+   CLIENT_LDFLAGS+=-s EXPORT_ES6
+   CLIENT_LDFLAGS+=-s EXPORT_NAME=quakelive
+ 
+@@ -1027,7 +1029,9 @@ ifeq ($(PLATFORM),emscripten)
+ 
+   SHLIBEXT=wasm
+   SHLIBCFLAGS=-fPIC
+-  SHLIBLDFLAGS=-s SIDE_MODULE
++  # QuakeWeb: SIDE_MODULE=2 descarta lo que no se exporta; el motor sólo busca dllEntry y vmMain.
++  # Con SIDE_MODULE=1 cgame pesaba 14 MB, más que el tope de Chrome para compilar wasm en el hilo principal.
++  SHLIBLDFLAGS=-s SIDE_MODULE=2 -s EXPORTED_FUNCTIONS=_dllEntry,_vmMain
+ 
+ else # ifeq emscripten
+ 
+-- 
+2.45.1.windows.1
+
