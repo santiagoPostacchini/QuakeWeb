@@ -4,9 +4,10 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 
 ## Stack
 
-- Juego y motor: **Quake 3** con el fork de ioquake3 de "The Longest Yard" (`jdarpinian/ioq3`, commit fijo),
-  compilado a WebAssembly con Emscripten 3.1.58. Contenido objetivo: los archivos de Quake Live del anfitrión.
-  Ver [ARCHITECTURE.md](ARCHITECTURE.md) (D-004) y [motor/README.md](motor/README.md).
+- Motor objetivo: **ioquakelive**, commit fijo `fb4414618c120d773590e5aebef8a3f7e23d2833`, portado a WebAssembly
+  con Emscripten 3.1.58 (D-006). Contenido: los archivos locales de Quake Live del anfitrión.
+  Ver [motor/ql/README.md](motor/ql/README.md). El fork de "The Longest Yard" (`motor/`) conserva la prueba de
+  mapas y red anterior (D-004); todavía falta portar su transporte al motor objetivo.
 - Página: TypeScript en el navegador (como CSweb: Vite + TypeScript, sin frameworks de interfaz; todavía no existe).
   Publicación estática en GitHub Pages.
 
@@ -15,6 +16,9 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 - Build del motor: workflow "Motor web" en GitHub Actions ([.github/workflows/motor.yml](.github/workflows/motor.yml));
   se dispara con cambios en `motor/**` o a mano. Deja el zip como artefacto `motor-web`. No hay toolchain local
   (esta PC no tiene `emcc`, `make` ni compilador de C).
+- Build de ioquakelive: workflow "Motor Quake Live web" ([.github/workflows/motor-ql.yml](.github/workflows/motor-ql.yml)),
+  artefacto `motor-ql-web`. `node pruebas/servidor.mjs` sirve pruebas en `http://127.0.0.1:5180/ql/?mapa=campgrounds`.
+  Espera el build en `motor/ql/build/` y lee `pak00.pk3` directamente de la instalación Steam local.
 - Instalar / build de la página / tests / lint: `(completar cuando exista la página)`
 
 ## Convenciones
@@ -26,6 +30,8 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
   IDBFS): no la usamos; la página propia monta IDBFS y nombra todo con el prefijo.
 - Cambios al motor: sólo como parches en `motor/parches/` (generados con `git diff` sobre el commit fijado), anotados
   en la tabla de [motor/README.md](motor/README.md).
+- Cambios a ioquakelive: parches en `motor/ql/parches/`, aplicados en orden sobre el commit D-006.
+  Sus módulos wasm deben mantener los símbolos internos ocultos; revisar con `motor/ql/herramientas/verificar-modulos.mjs`.
 - No tocar otros repos ni sus ramas por accidente: los comandos de Git se ejecutan siempre con `-C C:\dev\QuakeWeb`.
 - Link para unirse estable: `…/QuakeWeb/#CODIGO` (CiberWeb lo usa; ver [PROMPT.md](PROMPT.md)).
 - Pruebas entre pestañas con `?perfil=<nombre>` y del relay con `?relay=1`.

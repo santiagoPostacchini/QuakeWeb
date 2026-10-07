@@ -69,7 +69,6 @@ jobs:
           ./emsdk activate "$EMSDK_VERSION"
 
       - name: Compilar el motor y la lógica de juego (módulos wasm)
-        continue-on-error: true
         run: |
           source emsdk/emsdk_env.sh
           cd ioql
@@ -85,6 +84,11 @@ jobs:
           node ../../../../motor/ql/herramientas/recortar-ceros.mjs cgamewasm32.wasm qagamewasm32.wasm uiwasm32.wasm
           rm -f iobin.pk3
           zip -j9 iobin.pk3 cgamewasm32.wasm qagamewasm32.wasm uiwasm32.wasm
+
+      - name: Verificar ABI y aislamiento de los módulos
+        run: |
+          cd ioql/build/release-emscripten-wasm32
+          node ../../../motor/ql/herramientas/verificar-modulos.mjs quakelive_opengl2.wasm32.wasm baseq3/cgamewasm32.wasm baseq3/qagamewasm32.wasm baseq3/uiwasm32.wasm
 
       - name: Resumen
         if: always()

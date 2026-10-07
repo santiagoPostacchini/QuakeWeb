@@ -75,6 +75,9 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
 - Alternativas descartadas: seguir con el fork web y copiar sólo física y armas a la lógica de Quake 3 (sin menús,
   HUD ni todos los modos de QL); primero multijugador con el motor actual y decidir después.
 - Estado: vigente. El fork web (D-004) queda como referencia y fuente de piezas; su build sigue en `motor.yml`.
+- Validación del port (T-010): aislar símbolos internos con `-fvisibility=hidden` elimina las colisiones de datos
+  entre motor/qagame/ui. El workflow revisa la ABI y ausencia de `GOT.mem`; `campgrounds` alcanza `CA_ACTIVE`
+  y el jugador puede entrar y moverse con el menú/HUD de ioquakelive. Red de este motor todavía pendiente.
 
 ### D-005: Camino de red (borrador, pendiente de la etapa 0)
 

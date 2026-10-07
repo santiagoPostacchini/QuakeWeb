@@ -106,15 +106,27 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
 
 ### T-008: Que se juegue como Quake Live
 - Responsable: claude (investigación: gemini)
-- Estado: pendiente
+- Estado: en curso
 - Rama:
 - Aceptación: la meta final del proyecto es correr Quake Live en el navegador. Con el contenido de QL ya cargando
   (T-007), falta su jugabilidad: física de movimiento, armas, armadura e ítems, modos (Duel, FFA, TDM, CA, CTF), HUD,
-  mira y menús. Se reescribe sobre el código GPL de Quake 3 (`code/game`, `code/cgame`, `bg_pmove.c`) como parches en
-  `motor/parches/`, con valores tomados de fuentes públicas y anotados con su fuente. Criterio por etapa: una tabla
+  mira y menús. D-006 aprobó portar ioquakelive (implementación GPL de QL) mediante `motor/ql/parches/`.
+  Criterio por etapa: una tabla
   "Quake Live vs QuakeWeb" en este archivo con cada regla medida en el juego.
 - Hallazgos: investigación encargada a Gemini (`docs/research/quake-live-reglas.md`). La ingeniería inversa de las
   DLL de QL sigue descartada hasta confirmar el EULA oficial.
+
+### T-010: Aislar los módulos wasm de ioquakelive
+- Responsable: codex
+- Estado: en curso
+- Rama: codex/ql-memoria
+- Aceptación: build válido; cgame/qagame/ui sin variables globales exportadas ni referencias GOT.mem;
+  entrar y moverse en `campgrounds` con ioquakelive sin configstrings NULL ni corrupción del heap.
+- Hallazgos (2026-10-07): reproducido el fallo del build `37674407445`: configstrings inicializadas y luego
+  NULL en `G_InitGame`; cliente 3 con estado inválido y abort por corrupción del heap. qagame importa mediante
+  GOT.mem nombres que también exporta el motor (`sv_fps`, `sv_mapname`, `g_gametype`, `vec3_origin`, `bytedirs`).
+  `sv_fps` y `sv_mapname` son `vmCvar_t` en qagame y punteros en el motor. Parche 0006: `-fvisibility=hidden`
+  para los módulos; se conserva la ABI pública `dllEntry`/`vmMain`. Primera compilación: `37676925727`.
 
 ### T-009: Señalización de HumbleNet propia (dos pestañas)
 - Responsable: claude (especificación: subagente Haiku; implementación: codex)

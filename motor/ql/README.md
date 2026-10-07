@@ -9,11 +9,10 @@ submódulos `libogg` y `libvorbis`), aplica [`parches/`](parches) en orden y com
 
 ## Plan del port
 
-1. El motor compila para la web (cliente, sin red). ← en curso. Primera corrida: la lógica de juego ya compila a wasm
-   sin cambios; el motor sólo fallaba por `ogg/config_types.h` (lo genera el workflow).
+1. El motor compila para la web (cliente, sin red). Verificado en GitHub Actions.
 2. La lógica de juego (`cgame`, `qagame`, `ui`) compila como módulos wasm (`SIDE_MODULE`) y el motor los carga con
    `dlopen` (`MAIN_MODULE`). Cuidar los símbolos globales duplicados entre módulos (`-fvisibility=hidden`).
-3. Un mapa de QL corre en el navegador con las reglas de ioquakelive.
+3. `campgrounds` carga con las reglas, menú y HUD de ioquakelive; jugador entra y se mueve (T-010).
 4. Red: HumbleNet del fork web de "The Longest Yard" (`motor/` de este repo) y señalización propia (T-009).
 
 ## Cómo trabajar los parches
@@ -26,4 +25,26 @@ exportan con `git format-patch <commit fijado>..HEAD -o ../parches/`. Codex pued
 
 | Archivo | Qué hace | Estado |
 |---|---|---|
-| `0001-Emscripten-motor-como-MAIN_MODULE-…patch` | El motor se enlaza como `MAIN_MODULE` (para `dlopen`) y la lógica de juego como `SIDE_MODULE=2` exportando sólo `dllEntry`/`vmMain` (con `SIDE_MODULE=1` `cgame` pesaba 14,3 MB). | escrito, sin probar |
+| `0001` | Motor `MAIN_MODULE`, lógica `SIDE_MODULE=2`, entradas `dllEntry`/`vmMain`. | build y navegador |
+| `0002` | Motor PIC; qagame usa `dllEntry` y tabla de funciones, sin `vmMain`. | build y navegador |
+| `0003` | Memoria inicial de 256 MB que puede crecer hasta 2 GB; elimina plantillas ausentes. | build y navegador |
+| `0004` | Nombres de funciones en las pilas de errores de wasm. | build |
+| `0006` | Oculta símbolos internos de los módulos para evitar colisiones de la GOT. | build y navegador |
+
+Se retiró `0005`: era diagnóstico temporal y salteaba `Z_Free` ante configstrings NULL. La corrección conserva
+los controles originales del motor. El salto en la numeración mantiene la referencia del parche de aislamiento.
+
+## Validación de módulos
+
+Después de recortar los segmentos de ceros, el workflow ejecuta `herramientas/verificar-modulos.mjs`. Revisa que
+los wasm sean válidos, que cada módulo exponga las entradas ABI esperadas y que no publique variables globales
+ni las importe mediante `GOT.mem`. El build falla si la compilación o esta verificación fallan.
+
+El build anterior (`37674407445`) tenía 2198 exportaciones/referencias de datos sin aislar. qagame resolvía
+`sv_fps` y `sv_mapname` contra los punteros del motor, aunque usa estructuras `vmCvar_t`; después de inicializar
+el juego se perdían las configstrings y se corrompía el heap. Con `-fvisibility=hidden`, los tres módulos pasan
+el chequeo y `campgrounds` alcanza `CA_ACTIVE` (build `37676925727`, 25,7 s en esta PC, 8 s leyendo el pak local).
+
+Prueba local: `node pruebas/servidor.mjs`, después `http://127.0.0.1:5180/ql/?mapa=campgrounds`. Entrá con el menú
+Join Match o con `team free` en la consola del juego. F2 muestra u oculta el registro de diagnóstico.
+Faltan la red de este motor y la comparación completa de reglas/modos con el juego original (T-008).
