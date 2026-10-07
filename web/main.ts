@@ -9,17 +9,30 @@ import { prepararAtajos, permitirSalida } from './atajos.ts';
 import { generarCodigo, huellaPak } from './red-util.ts';
 import { entrarSala, prepararIce, type InfoPartida } from './sala.ts';
 import type { OpcionesPartida } from './argumentos.ts';
+import { entrarArchivos } from './sala-archivos.ts';
 
 const $ = <T extends HTMLElement = HTMLElement>(id: string) => document.getElementById(id) as T;
 
 // ---- vista según el link (…/QuakeWeb/#CODIGO, 6 caracteres de ABCDEFGHJKMNPQRSTUVWXYZ23456789) ----
 const CODIGO = /^#([ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6})$/i;
 let sala: ReturnType<typeof entrarSala> | undefined;
+let archivosSala: ReturnType<typeof entrarArchivos> | undefined;
+let bajando = false;
+const progresoArchivos = $('archivos-progreso') as HTMLProgressElement;
+function abrirArchivos(codigo: string, host: boolean) {
+    archivosSala = entrarArchivos(codigo, host, () => pak00 && entradas ? { blob: pak00, huella: huellaPak(pak00.size, entradas) } : null,
+        () => sala?.info()?.huella, () => sala?.anfitrion() ?? null, (texto, fraccion) => {
+            $('join-hint').textContent = texto;
+            progresoArchivos.hidden = fraccion === undefined;
+            if (fraccion !== undefined) progresoArchivos.value = fraccion;
+            diagnostico();
+        });
+}
 let busqueda = 0;
 let motor: Awaited<ReturnType<typeof arrancarMotor>> | undefined;
 const ice = prepararIce(import.meta.env.VITE_TURN_ENDPOINT);
 function diagnostico(log = motor?.diagnostico() ?? '') {
-    $('diag-text').textContent = `${sala?.diagnostico() ?? 'Sin sala'}\n${log}`;
+    $('diag-text').textContent = `${sala?.diagnostico() ?? 'Sin sala'}\n${archivosSala?.diagnostico() ?? ''}\n${log}`;
     $('diag').hidden = false;
 }
 function mostrarInfo(info: InfoPartida | null) {
@@ -29,18 +42,20 @@ function mostrarInfo(info: InfoPartida | null) {
     $('join-map').textContent = info ? `${info.mapa} · ${MODOS.find(([v]) => Number(v) === info.modo)?.[1] ?? info.modo}` : '—';
     $('join-players').textContent = info ? `${info.jugadores} / ${info.max}` : '—';
     $('invite-players').textContent = `${info?.jugadores ?? 1} jugador${info?.jugadores === 1 ? '' : 'es'}`;
-    $('join-hint').textContent = info ? 'Elegí tu carpeta Quake Live y uníte con tus propios archivos.' : 'Buscando al anfitrión…';
+    if (!bajando) $('join-hint').textContent = info ? 'Podés descargar de los jugadores o elegir tu carpeta Quake Live.' : 'Buscando al anfitrión…';
     diagnostico();
 }
 async function buscar(codigo: string | null) {
     const turno = ++busqueda;
     const vieja = sala; sala = undefined;
     await vieja?.salir();
+    await archivosSala?.salir(); archivosSala = undefined;
     if (!codigo) return;
     const servidores = await ice;
     if (turno !== busqueda) return;
     try {
         sala = entrarSala(codigo, servidores, null, mostrarInfo, texto => { $('join-hint').textContent = texto; diagnostico(); });
+        abrirArchivos(codigo, false);
         diagnostico();
     } catch (causa) { error((causa as Error).message); }
 }
@@ -102,6 +117,7 @@ async function usarPak(archivo: Blob) {
     const dir = await leerDirectorio(archivo);
     pak00 = archivo;
     entradas = dir;
+    $('join-btn').textContent = 'Unirse';
     await aplicarMarca(archivo, dir);
     const mapas = [...dir.values()].map(e => /^maps\/([^/]+)\.bsp$/i.exec(e.nombre)?.[1]).filter((m): m is string => !!m).sort();
     const lista = $('map') as HTMLSelectElement;
@@ -183,9 +199,26 @@ $('diag-copy').addEventListener('click', () => {
         () => toast('Diagnóstico copiado'),
         () => toast('No se pudo copiar. Seleccioná el texto del diagnóstico y copialo.'));
 });
-$('join-btn').addEventListener('click', () => {
+$('join-btn').textContent = 'Descargar de los jugadores (~900 MB)';
+$('join-btn').addEventListener('click', async () => {
     if (activo() || motorDetenido) return;
-    if (!pak00 || !entradas) { selectorCarpeta.click(); $('join-hint').textContent = 'Elegí la carpeta Quake Live; después apretá Unirse.'; return; }
+    if (!pak00 || !entradas) {
+        if (bajando || !archivosSala) return;
+        bajando = true;
+        const descargaSala = archivosSala;
+        try {
+            const archivo = await descargaSala.descargar();
+            if (archivosSala !== descargaSala) return;
+            if (huellaPak(archivo.size, await leerDirectorio(archivo)) !== descargaSala.huella())
+                throw new Error('El pak descargado no coincide con el manifiesto.');
+            await archivoGuardado(archivo);
+            await usarPak(archivo);
+            progresoArchivos.hidden = true;
+            toast('Archivos listos. Apretá Unirse para jugar.');
+        } catch (causa) { error((causa as Error).message); }
+        finally { bajando = false; }
+        return;
+    }
     const info = sala?.info();
     if (!info) { error('Todavía no se encontró al anfitrión. Esperá el resultado de la búsqueda.'); return; }
     if (huellaPak(pak00.size, entradas) !== info.huella) {
@@ -221,6 +254,7 @@ $('host-btn').addEventListener('click', async () => {
         sala = entrarSala(codigo, await ice, { servidor: opciones.servidor, mapa, modo: opciones.modo,
             max: opciones.jugadoresMax, jugadores: 1, huella: huellaPak(pak00.size, entradas) }, mostrarInfo,
             texto => { toast(texto); diagnostico(); });
+        await archivosSala?.salir(); abrirArchivos(codigo, true);
         $('invite-link').textContent = `${location.href.split('#')[0]}#${codigo}`;
         await iniciar(opciones);
     } catch (causa) { error((causa as Error).message); }
