@@ -1,0 +1,93 @@
+# Port de ioquakelive a la web (D-006). Baja un commit fijo, aplica motor/ql/parches/ y compila con Emscripten.
+# Por ahora es un experimento: junta todos los errores (make -k) del motor y de los módulos de juego wasm.
+name: Motor Quake Live web
+
+on:
+  push:
+    paths:
+      - 'motor/ql/**'
+      - '.github/workflows/motor-ql.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    env:
+      QL_REPO: https://github.com/tjone270/ioquakelive.git
+      QL_COMMIT: fb4414618c120d773590e5aebef8a3f7e23d2833
+      EMSDK_VERSION: 3.1.58
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bajar ioquakelive (commit fijo) y libogg/libvorbis
+        run: |
+          git init -q ioql
+          cd ioql
+          git remote add origin "$QL_REPO"
+          git fetch -q --depth 1 origin "$QL_COMMIT"
+          git checkout -q --detach FETCH_HEAD
+          git submodule update --init --depth 1 code/libogg code/libvorbis
+          git log -1 --format='%H %ad %s'
+
+      - name: Aplicar parches de QuakeWeb
+        run: |
+          cd ioql
+          shopt -s nullglob
+          for p in ../motor/ql/parches/*.patch; do
+            echo "== $p"
+            git apply --verbose "$p"
+          done
+
+      - uses: actions/checkout@v4
+        with:
+          repository: emscripten-core/emsdk
+          path: emsdk
+
+      - name: Instalar Emscripten
+        run: |
+          cd emsdk
+          ./emsdk install "$EMSDK_VERSION"
+          ./emsdk activate "$EMSDK_VERSION"
+
+      - name: Compilar el motor (cliente web)
+        continue-on-error: true
+        run: |
+          source emsdk/emsdk_env.sh
+          cd ioql
+          set -o pipefail
+          emmake make release -k -j"$(nproc)" 2>&1 | tee ../motor.log
+
+      - name: Compilar la lógica de juego (módulos wasm)
+        continue-on-error: true
+        run: |
+          source emsdk/emsdk_env.sh
+          cd ioql
+          set -o pipefail
+          emmake make release BUILD_GAME_SO=1 -k -j"$(nproc)" 2>&1 | tee ../modulos.log
+
+      - name: Resumen
+        if: always()
+        run: |
+          for f in motor.log modulos.log; do
+            echo "=== $f: $(grep -c 'error:' "$f" || true) errores"
+            grep -E 'error:|undefined symbol|Error [0-9]' "$f" | sort | uniq -c | sort -rn | head -60 || true
+          done
+          echo "=== generado:"
+          find ioql/build -maxdepth 3 \( -name '*.js' -o -name '*.wasm' -o -name '*.pk3' \) -exec ls -la {} \; || true
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: motor-ql-web
+          path: |
+            motor.log
+            modulos.log
+            ioql/build/release-emscripten-wasm32/*.js
+            ioql/build/release-emscripten-wasm32/*.wasm
+            ioql/build/release-emscripten-wasm32/baseq3/*.wasm
+            ioql/build/release-emscripten-wasm32/baseq3/*.pk3
+          if-no-files-found: warn
+          retention-days: 30

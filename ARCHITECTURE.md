@@ -58,6 +58,24 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
 - Riesgos: el fork lo mantiene una sola persona; las reglas de juego de Quake Live hay que reescribirlas.
 - Estado: vigente. Reemplaza el borrador anterior de D-004 (FTEQW + broker virtual), que queda descartado.
 
+### D-006: Base del motor: ioquakelive portado a la web (2026-10-07)
+
+- Contexto: la meta es que corra Quake Live (D-004). `tjone270/ioquakelive` (GPL-2.0, fork de ioquake3, activo en
+  septiembre de 2026) reimplementa el juego de Quake Live build 1069: física, armas, armadura escalonada, los 12
+  modos, HUD y la UI con los `.menu` de QL; pide el `pak00.pk3` legítimo. Según su README, `qagame` está al 60-70%.
+- Decisión (aprobada por el usuario): la base pasa a ser **ioquakelive** en un commit fijo, con nuestros cambios como
+  serie de parches en `motor/ql/`. Del fork web de "The Longest Yard" se trae lo que haga falta: la red HumbleNet,
+  las páginas y los ajustes de Emscripten. La lógica de juego, que ioquakelive carga como bibliotecas nativas (quitó
+  los QVM), se compila a módulos wasm (`SIDE_MODULE`) cargados con `dlopen`, como CSweb con Xash.
+- Razón: es el camino a "Quake Live de verdad" (UI, HUD y modos de QL), en vez de reescribir las reglas a mano sobre
+  la lógica de Quake 3.
+- Riesgos: `dlopen` en Emscripten (el fork web lo evitó por errores de compilación con `MAIN_MODULE`); símbolos
+  globales duplicados entre módulos (lección 4 de CSweb: compilar con `-fvisibility=hidden`); ioquakelive está a medio
+  hacer y lo mantiene una sola persona; su red es la de QL (protocolo 91), sin HumbleNet.
+- Alternativas descartadas: seguir con el fork web y copiar sólo física y armas a la lógica de Quake 3 (sin menús,
+  HUD ni todos los modos de QL); primero multijugador con el motor actual y decidir después.
+- Estado: vigente. El fork web (D-004) queda como referencia y fuente de piezas; su build sigue en `motor.yml`.
+
 ### D-005: Camino de red (borrador, pendiente de la etapa 0)
 
 - Contexto: el fork usa HumbleNet, con un "peer server" de señalización propio (C++/FlatBuffers) que también reparte
