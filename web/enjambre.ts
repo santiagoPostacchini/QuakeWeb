@@ -92,7 +92,8 @@ export async function descargar(m: Manifiesto, almacen: AlmacenTrozos, transport
                         if (vetados.has(par)) return;
                         persistiendo = true;
                         await almacen.guardar(clave, i, blob);
-                        partes[i] = blob; disponibles.add(i); bytes += blob.size;
+                        // El trozo releído vive en disco: así no quedan ~900 MB del pak en memoria.
+                        partes[i] = await almacen.leer(clave, i) ?? blob; disponibles.add(i); bytes += blob.size;
                     } catch (e) {
                         if (signal.aborted || persistiendo) throw e;
                         descanso.set(par, Date.now() + timeout);

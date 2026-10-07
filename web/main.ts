@@ -3,7 +3,7 @@
 import { leerDirectorio, type EntradaZip } from './zip.ts';
 import { aplicarMarca } from './marca.ts';
 import { arrancarMotor } from './motor.ts';
-import { archivoGuardado } from './archivos.ts';
+import { archivoGuardado, borrarTrozos } from './archivos.ts';
 import { sanearCvar } from './argumentos.ts';
 import { prepararAtajos, permitirSalida } from './atajos.ts';
 import { generarCodigo, huellaPak } from './red-util.ts';
@@ -212,7 +212,10 @@ $('join-btn').addEventListener('click', async () => {
             if (huellaPak(archivo.size, await leerDirectorio(archivo)) !== descargaSala.huella())
                 throw new Error('El pak descargado no coincide con el manifiesto.');
             await archivoGuardado(archivo);
-            await usarPak(archivo);
+            // El pak releído de IndexedDB vive en disco; recién ahí se borran los trozos que lo formaban.
+            const guardado = await archivoGuardado() ?? archivo;
+            if (guardado !== archivo) await borrarTrozos().catch(() => undefined);
+            await usarPak(guardado);
             progresoArchivos.hidden = true;
             toast('Archivos listos. Apretá Unirse para jugar.');
         } catch (causa) { error((causa as Error).message); }
