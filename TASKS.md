@@ -117,10 +117,12 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
   DLL de QL sigue descartada hasta confirmar el EULA oficial.
 
 ### T-009: Señalización de HumbleNet propia (dos pestañas)
-- Responsable: claude (especificación: subagente Haiku; implementación: codex)
-- Estado: en curso
-- Rama: exploracion-motor (implementación en `codex/…`)
-- Aceptación: un servidor de señalización propio, compatible con HumbleNet, deja que dos pestañas en esta PC jueguen
-  un deathmatch en un mapa de QL (anfitrión con `net_server_name`, invitado con `connect X.humblenet`). La lógica de
-  sala no depende del transporte, para reutilizarla después dentro de la página sobre Trystero (D-005).
-- Hallazgos: especificación en `docs/research/humblenet-senalizacion.md` (en preparación).
+- Responsable: claude (revisión e integración), codex (implementación).
+- Estado: en curso; implementación acotada hecha y verificada.
+- Rama: `codex/senal-humblenet` (base `exploracion-motor`).
+- Aceptación: servidor compatible que permita un deathmatch entre dos pestañas con mapas de QL.
+- Hecho: esquema con licencia BSD-3, códec FlatBuffers manual de los 13 mensajes y validación de buffers.
+- Hecho: lógica sin transporte (saludo, juegos, alias, negociación y relay) y WebSocket local `humblepeer`.
+- Verificación: `npm test` pasa (22 tests); `npm run typecheck` pasa; sin dependencias nuevas.
+- Hallazgos: se conservan opcionales ausentes, se limpian ofertas al desconectar y cada mensaje usa su propio frame.
+- Pendiente: revisión e integración; probar deathmatch con el motor en dos pestañas (no realizado acá).
