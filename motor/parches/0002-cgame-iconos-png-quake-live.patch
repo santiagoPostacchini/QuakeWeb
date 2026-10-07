@@ -1,0 +1,19 @@
+diff --git a/code/cgame/cg_players.c b/code/cgame/cg_players.c
+index 4a4abaa..00c7454 100644
+--- a/code/cgame/cg_players.c
++++ b/code/cgame/cg_players.c
+@@ -605,6 +605,14 @@ static qboolean CG_RegisterClientModelname( clientInfo_t *ci, const char *modelN
+ 	else if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "tga" ) ) {
+ 		ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
+ 	}
++	// QuakeWeb: los modelos de Quake Live traen el ícono en .png (o .jpg). Sin ícono el modelo se descarta
++	// sin aviso y, si es el modelo por defecto, el juego se corta con "DEFAULT_MODEL failed to register".
++	else if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "png" ) ) {
++		ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
++	}
++	else if ( CG_FindClientHeadFile( filename, sizeof(filename), ci, teamName, headName, headSkinName, "icon", "jpg" ) ) {
++		ci->modelIcon = trap_R_RegisterShaderNoMip( filename );
++	}
+ 
+ 	if ( !ci->modelIcon ) {
+ 		return qfalse;

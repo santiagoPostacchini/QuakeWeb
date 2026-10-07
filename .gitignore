@@ -16,3 +16,6 @@
 /motor/ioq3/
 /motor/build/
 /emsdk/
+
+# Configuración local de Claude Code
+/.claude/

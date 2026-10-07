@@ -17,13 +17,18 @@ Para actualizar: cambiar `IOQ3_COMMIT` en el workflow, verificar que los parches
 
 ## Qué genera
 
-`build/release-emscripten-wasm32.zip` con:
+El artefacto `motor-web` (archivos sueltos, sin zip) con:
 
-- `ioquake3_opengl2.wasm32.js` / `.wasm`: el cliente (con servidor de partida incluido).
+- `ioquake3_opengl2.wasm32.js` / `.wasm`: el cliente (con servidor de partida incluido), con Ogg Vorbis.
 - `ioq3ded.wasm32.js` / `.wasm`: servidor dedicado.
-- `ztm-flexible-hud.pk3`: la lógica del juego de Quake 3 (código GPL) compilada a QVM (`cgame`, `qagame`, `ui`), con el
-  HUD flexible de ZTM. Reemplaza a las DLL nativas de Quake Live, que no corren en WebAssembly.
+- `baseq3/vm/{cgame,qagame,ui}.qvm` y `ztm-flexible-hud.pk3` (los mismos QVM empaquetados): la lógica del juego de
+  Quake 3 (código GPL) con el HUD flexible de ZTM. Reemplaza a las DLL nativas de Quake Live, que no corren en
+  WebAssembly. El Makefile del fork apaga los QVM para Emscripten; el workflow los pide con `BUILD_GAME_QVM=1`.
+- `missionpack/vm/*.qvm`: la lógica de Team Arena, cuyo menú usa archivos `.menu` como los de Quake Live.
 - Las páginas de prueba del fork (`index.html`, `server.html`).
+
+Para probarlo en local: bajar el artefacto a `motor/build/release-emscripten-wasm32/` (ignorado por Git) y ver
+[`../pruebas/`](../pruebas).
 
 Los datos del juego no están en el build: se cargan en el navegador desde la instalación de cada jugador.
 
@@ -31,7 +36,8 @@ Los datos del juego no están en el build: se cargan en el navegador desde la in
 
 | Archivo | Qué hace | Estado |
 |---|---|---|
-| `0001-bsp47-quake-live.patch` | Acepta mapas BSP versión 47 (Quake Live) además de la 46. La 47 tiene una sección extra (nº 17) que se ignora. | escrito, sin probar |
+| `0001-bsp47-quake-live.patch` | Acepta mapas BSP versión 47 (Quake Live) además de la 46. La 47 tiene una sección extra (nº 17) que se ignora. | probado: `campgrounds` carga en el servidor y en el renderer (3329 caras) |
+| `0002-cgame-iconos-png-quake-live.patch` | La lógica de juego acepta el ícono del jugador en `.png`/`.jpg` (Quake Live no trae `.tga`). Sin esto se corta con `DEFAULT_MODEL (sarge) failed to register`. | escrito, sin probar |
 
 Los parches se generan con `git diff` sobre el commit fijado y tienen que aplicar con `git apply` sin conflictos.
 

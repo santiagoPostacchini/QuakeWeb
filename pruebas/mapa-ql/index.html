@@ -17,7 +17,7 @@
 <pre id="registro">Cargando…  (F2 muestra u oculta este registro)</pre>
 <script type="module">
 // Prueba de T-007: arranca el motor directo en un mapa de Quake Live (BSP 47) con la lógica de juego GPL
-// (ztm-flexible-hud.pk3). Uso: /mapa-ql/?mapa=campgrounds&bots=2
+// en QVM. Uso: /mapa-ql/?mapa=campgrounds&bots=2&logica=baseq3|missionpack
 const params = new URLSearchParams(location.search);
 const mapa = (params.get('mapa') ?? 'campgrounds').replace(/[^a-z0-9_-]/gi, '');
 const bots = Math.min(Number(params.get('bots') ?? 0) || 0, 8);
@@ -41,9 +41,13 @@ async function bajar(url) {
     return datos;
 }
 
+// Lógica de juego GPL en QVM: la de Quake 3 (baseq3) o la de Team Arena (missionpack), cuyo menú usa
+// archivos .menu como los de Quake Live. Se montan sueltos en /baseq3/vm (con sv_pure 0 el motor los lee).
+const logica = params.get('logica') === 'missionpack' ? 'missionpack' : 'baseq3';
+const QVM = ['cgame', 'qagame', 'ui'];
 const archivos = Promise.all([
     bajar('/datos/baseq3/pak00.pk3'),
-    bajar('/motor/ztm-flexible-hud.pk3'),
+    ...QVM.map(n => bajar(`/motor/${logica}/vm/${n}.qvm`)),
 ]);
 
 const argumentos = [
@@ -67,11 +71,11 @@ ioquake3({
     preRun: [async (modulo) => {
         modulo.addRunDependency('quakeweb-archivos');
         try {
-            const [pak00, hud] = await archivos;
-            modulo.FS.mkdirTree('/baseq3');
+            const [pak00, ...qvms] = await archivos;
+            modulo.FS.mkdirTree('/baseq3/vm');
             modulo.FS.writeFile('/baseq3/pak00.pk3', pak00, { canOwn: true });
-            modulo.FS.writeFile('/baseq3/ztm-flexible-hud.pk3', hud, { canOwn: true });
-            anotar('archivos montados en /baseq3');
+            QVM.forEach((n, i) => modulo.FS.writeFile(`/baseq3/vm/${n}.qvm`, qvms[i], { canOwn: true }));
+            anotar(`archivos montados en /baseq3 (lógica: ${logica})`);
         } catch (e) {
             anotar(`no se pudieron cargar los archivos: ${e.message}`);
         } finally {

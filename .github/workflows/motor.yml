@@ -53,23 +53,34 @@ jobs:
       # BUILD_GAME_QVM=1: el Makefile lo apaga para Emscripten, pero sin la lógica de juego en QVM
       # (ztm-flexible-hud.pk3) los mapas de Quake Live no tienen reglas: las DLL de QL no corren en la web.
       # Los QVM se compilan con herramientas nativas (q3lcc, q3asm) hechas con el gcc del runner.
+      # USE_CODEC_VORBIS=1: Quake Live trae la mitad de sus sonidos en .ogg; si falta el .wav, el motor prueba
+      # los otros códecs. Usa las libogg/libvorbis incluidas en el fork.
+      # Sin ARCHIVE: con -j el zip se armaba antes de que existiera ztm-flexible-hud.pk3 y quedaba afuera; se
+      # sube la carpeta con los archivos finales.
       - name: Compilar
-        env:
-          ARCHIVE: 1
         run: |
           source emsdk/emsdk_env.sh
           cd ioq3
-          emmake make release BUILD_GAME_QVM=1 -j"$(nproc)"
+          emmake make release BUILD_GAME_QVM=1 USE_CODEC_VORBIS=1 -j"$(nproc)"
 
-      - name: Listar lo generado
+      - name: Verificar lo generado
         run: |
-          ls -la ioq3/build/release-emscripten-wasm32/
-          find ioq3/build/release-emscripten-wasm32 -name '*.qvm' -o -name '*.pk3' | sort
-          test -f ioq3/build/release-emscripten-wasm32/ztm-flexible-hud.pk3
-          ls -la ioq3/build/*.zip
+          cd ioq3/build/release-emscripten-wasm32
+          for f in ioquake3_opengl2.wasm32.js ioquake3_opengl2.wasm32.wasm ioq3ded.wasm32.js ioq3ded.wasm32.wasm \
+                   ztm-flexible-hud.pk3 baseq3/vm/cgame.qvm baseq3/vm/qagame.qvm baseq3/vm/ui.qvm; do
+            test -f "$f" || { echo "falta $f"; exit 1; }
+          done
+          ls -la *.js *.wasm *.pk3 *.html baseq3/vm missionpack/vm
 
       - uses: actions/upload-artifact@v4
         with:
           name: motor-web
-          path: ioq3/build/*.zip
+          path: |
+            ioq3/build/release-emscripten-wasm32/*.js
+            ioq3/build/release-emscripten-wasm32/*.wasm
+            ioq3/build/release-emscripten-wasm32/*.html
+            ioq3/build/release-emscripten-wasm32/*.pk3
+            ioq3/build/release-emscripten-wasm32/baseq3/vm/*.qvm
+            ioq3/build/release-emscripten-wasm32/missionpack/vm/*.qvm
+          if-no-files-found: error
           retention-days: 30
