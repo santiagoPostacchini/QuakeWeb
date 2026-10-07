@@ -31,7 +31,11 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
     compartido con CSweb).
   - No hay build web reciente: el último es de 2022. Hay que compilar (emsdk 2.0.12 en Ubuntu, como la CI de FTE).
   - Bloqueado: no hay Quake instalado en las rutas habituales de esta PC y no hay `emcc`/`make`/Docker/WSL.
-  - Pendiente: build del motor, dos pestañas en deathmatch, prueba de relay y aprobación del usuario.
+  - Nuevo: al usuario le gusta Quake Live, que es de la familia de Quake 3. Existe un port web de Quake 3 con servidor
+    en una pestaña (`thelongestyard.link`, fork de ioq3 con HumbleNet, emsdk 3.1.58). Comparación en el mismo documento.
+    Hay que decidir el juego (Quake 1/FTEQW o Quake 3/ioq3) antes de compilar.
+  - Pendiente: decisión del juego, build del motor elegido (GitHub Actions, aprobado por el usuario; falta el repo
+    remoto), dos pestañas en deathmatch, prueba de relay y aprobación del camino de red.
 
 ### T-002: Etapa 1, crear y unirse
 - Responsable: claude

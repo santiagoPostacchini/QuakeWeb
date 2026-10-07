@@ -84,6 +84,46 @@ de red de Quake que FTE ya probó, evita infraestructura nueva, reutiliza lo ya 
 señalización, relay y archivos, y no depende del broker de terceros. Es una **recomendación a validar**, no una
 decisión: falta compilar el motor, correr dos pestañas y medir. Si A2 falla en las pruebas, el plan B es A1.
 
+## Alternativa: Quake 3 (lo más cercano a Quake Live)
+
+Quake Live es una evolución de Quake 3 Arena (mismo linaje de motor y de juego: arenas, railgun, CTF, duelo); Quake 1
+es otro juego (más lento, sin rail, otra física). Si el objetivo es el estilo Quake Live, el juego es **Quake 3**.
+Hallazgos del 2026-10-07, también sólo de leer código y documentación:
+
+- **Ya existe un port web de Quake 3 con servidor en una pestaña**: `https://thelongestyard.link/`, de James
+  Darpinian ("modeless"), código en `github.com/jdarpinian/ioq3` (rama `thelongestyard.link`, GPL v2, último
+  commit 2026-04-12), basado en ioquake3. La red usa **HumbleNet** (`github.com/jdarpinian/HumbleNet`, último commit
+  2026-07-04): DataChannels WebRTC y un "peer server" de señalización por WebSocket (`net_peer_server`). El primero
+  que abre una sala con `+set net_server_name X +map q3dm17` pasa a ser el servidor y los demás hacen
+  `+connect "X.humblenet"` (`code/web/index.html:523-535`). Es el mismo modelo que pide el encargo.
+- **TURN**: el peer server manda los servidores ICE (con usuario y clave) en el mensaje de saludo
+  (`humblenet_p2p_signaling.cpp:374-394`), así que se puede inyectar el relay como en el broker de FTE.
+- **Señalización**: el peer server de HumbleNet es C++ (no corre en un Worker) y usa FlatBuffers. El port
+  `WofWca/quake3.xdc` (marzo de 2026) muestra el camino: simula el WebSocket de señalización y el WebRTC en el
+  navegador, con otro transporte. Para QuakeWeb sería lo equivalente a A2: un "peer server virtual" dentro de la
+  página, sobre Trystero.
+- **Build**: CI del fork con **emsdk 3.1.58** (`.github/workflows/build.yml`), mucho más nuevo que el 2.0.12 de FTE.
+- **Datos**: el sitio original usa el **demo de Quake 3** (`pak0.pk3` de 49.289.300 bytes), que baja de Internet
+  Archive y cachea en una Cache API llamada `thelongestyard` (hay que renombrarla a `quakeweb-…`). Con el juego
+  completo hay que armar un paquete desde `baseq3/` (el `pak0.pk3` completo es de cientos de MB: no medido, no hay
+  Quake 3 en esta PC). Alternativa libre: OpenArena (assets GPL, cientos de MB). La licencia de redistribución del
+  demo **no está verificada**.
+- **Riesgos**: depende de un fork de una sola persona (22 estrellas) y de su fork de HumbleNet (5 estrellas; el
+  HumbleNet original, 574 estrellas, no recibe cambios desde enero de 2022); hay que modificar el motor para el
+  origen compartido (la Cache API `thelongestyard` y el `localStorage`) y para el transporte de archivos; no se
+  midió cuántos jugadores aguanta una pestaña como servidor.
+
+Comparación rápida con Quake 1 + FTEQW:
+
+| | Quake 1 + FTEQW | Quake 3 + ioq3 (fork thelongestyard) |
+|---|---|---|
+| Parecido a Quake Live | bajo | alto |
+| Red en el navegador | nativa del motor, broker de ~150 líneas | HumbleNet, peer server C++/FlatBuffers |
+| Mantenimiento upstream | proyecto activo, port web oficial | un fork de una persona sobre ioq3 |
+| Tamaño de datos | decenas de MB | demo 49 MB / completo cientos de MB |
+| Datos libres | LibreQuake, shareware | demo, OpenArena |
+| Emscripten | 2.0.12 (CI de FTE) | 3.1.58 (CI del fork) |
+
 ## Lo que no está verificado
 
 - Que el build web actual compile con emsdk 2.0.12 y con uno más nuevo.
