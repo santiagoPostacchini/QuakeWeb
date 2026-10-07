@@ -1,4 +1,4 @@
-From 4ecf6cd7dba92a4329e5a267c986bce8cf5a0814 Mon Sep 17 00:00:00 2001
+From 3f03180a6bd1a447a45b59bb1ebf0278b1b246da Mon Sep 17 00:00:00 2001
 From: Santiago Postacchini <postacchinisantiago@gmail.com>
 Date: Wed, 7 Oct 2026 19:46:16 -0300
 Subject: [PATCH] =?UTF-8?q?Red:=20HumbleNet=20(WebRTC)=20para=20el=20naveg?=
@@ -9,7 +9,7 @@ Content-Transfer-Encoding: 8bit
 
 Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
 ---
- Makefile                                   |    25 +-
+ Makefile                                   |    24 +-
  code/humblenet/LICENSE.md                  |    23 +
  code/humblenet/NOTICES.md                  |    51 +
  code/humblenet/humblenet.h                 |   133 +
@@ -18,7 +18,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
  code/humblenet/humblenet_socket.h          |   216 +
  code/qcommon/net_humblenet.c               |   133 +
  code/qcommon/net_ip.c                      |    18 +-
- 9 files changed, 12116 insertions(+), 3 deletions(-)
+ 9 files changed, 12115 insertions(+), 3 deletions(-)
  create mode 100644 code/humblenet/LICENSE.md
  create mode 100644 code/humblenet/NOTICES.md
  create mode 100644 code/humblenet/humblenet.h
@@ -28,7 +28,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
  create mode 100644 code/qcommon/net_humblenet.c
 
 diff --git a/Makefile b/Makefile
-index e85212a..d190d39 100644
+index e85212a..946986b 100644
 --- a/Makefile
 +++ b/Makefile
 @@ -238,6 +238,7 @@ SDIR=$(MOUNT_DIR)/server
@@ -39,7 +39,7 @@ index e85212a..d190d39 100644
  SDLDIR=$(MOUNT_DIR)/sdl
  SYSDIR=$(MOUNT_DIR)/sys
  GDIR=$(MOUNT_DIR)/game
-@@ -983,7 +984,14 @@ ifeq ($(PLATFORM),emscripten)
+@@ -983,7 +984,13 @@ ifeq ($(PLATFORM),emscripten)
    ARCH=wasm32
    BINEXT=.js
  
@@ -47,15 +47,14 @@ index e85212a..d190d39 100644
 +  # QuakeWeb: la red del cliente y su listen server usa HumbleNet.
 +  USE_HUMBLENET=1
 +  CLIENT_CFLAGS+=-DUSE_HUMBLENET
-+  # QuakeWeb: el amalgamado usa C++; emcc enlaza el cliente con libc++.
-+  CLIENT_LIBS+=-lc++
++  # QuakeWeb: el amalgamado usa C++; MAIN_MODULE=1 ya enlaza libc++ entera (agregar -lc++ la duplica).
 +  # QuakeWeb: los callbacks JS de HumbleNet usan estas funciones del runtime.
 +  CLIENT_LDFLAGS+=-s DYNCALLS=1
 +  # QuakeWeb: dlopen del renderer y OpenAL sigue desactivado.
    USE_RENDERER_DLOPEN=0
    USE_OPENAL_DLOPEN=0
    BUILD_GAME_SO=0
-@@ -998,7 +1006,7 @@ ifeq ($(PLATFORM),emscripten)
+@@ -998,7 +1005,7 @@ ifeq ($(PLATFORM),emscripten)
    CLIENT_LDFLAGS+=-s MIN_WEBGL_VERSION=1 -s MAX_WEBGL_VERSION=2
  
    # The HTML file can use these functions to load extra files before the game starts.
@@ -64,7 +63,7 @@ index e85212a..d190d39 100644
    CLIENT_LDFLAGS+=-s EXIT_RUNTIME=1
    # QuakeWeb: el motor carga la lógica de juego (cgame, qagame, ui) con dlopen, como módulos wasm.
    CLIENT_LDFLAGS+=-s MAIN_MODULE=1
-@@ -1638,6 +1646,12 @@ else
+@@ -1638,6 +1645,12 @@ else
  endif
  endif
  
@@ -77,7 +76,7 @@ index e85212a..d190d39 100644
  Q3R2OBJ = \
    $(B)/renderergl2/tr_animation.o \
    $(B)/renderergl2/tr_backend.o \
-@@ -2285,6 +2299,13 @@ $(B)/client/%.o: $(CDIR)/%.c
+@@ -2285,6 +2298,13 @@ $(B)/client/%.o: $(CDIR)/%.c
  $(B)/client/%.o: $(SDIR)/%.c
  	$(DO_CC)
  
