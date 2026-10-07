@@ -1,0 +1,70 @@
+# Compila el motor (ioquake3 para la web) con los parches de QuakeWeb.
+# Fuente: fork de ioquake3 de "The Longest Yard" en un commit fijo; ver motor/README.md.
+name: Motor web
+
+on:
+  push:
+    paths:
+      - 'motor/**'
+      - '.github/workflows/motor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    env:
+      IOQ3_REPO: https://github.com/jdarpinian/ioq3.git
+      IOQ3_COMMIT: e4ce732d67994b3b5f0be4bc901aa982c6e79af4
+      EMSDK_VERSION: 3.1.58
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bajar ioquake3 (commit fijo)
+        run: |
+          git init -q ioq3
+          cd ioq3
+          git remote add origin "$IOQ3_REPO"
+          git fetch -q --depth 1 origin "$IOQ3_COMMIT"
+          git checkout -q --detach FETCH_HEAD
+          git log -1 --format='%H %ad %s'
+
+      - name: Aplicar parches de QuakeWeb
+        run: |
+          cd ioq3
+          for p in ../motor/parches/*.patch; do
+            echo "== $p"
+            git apply --verbose "$p"
+          done
+
+      - uses: actions/checkout@v4
+        with:
+          repository: emscripten-core/emsdk
+          path: emsdk
+
+      - name: Instalar Emscripten
+        run: |
+          cd emsdk
+          ./emsdk install "$EMSDK_VERSION"
+          ./emsdk activate "$EMSDK_VERSION"
+
+      - name: Compilar
+        env:
+          ARCHIVE: 1
+        run: |
+          source emsdk/emsdk_env.sh
+          cd ioq3
+          emmake make release -j"$(nproc)"
+
+      - name: Listar lo generado
+        run: |
+          ls -la ioq3/build/release-emscripten-wasm32/
+          ls -la ioq3/build/*.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: motor-web
+          path: ioq3/build/*.zip
+          retention-days: 30

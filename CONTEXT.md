@@ -4,33 +4,39 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 
 ## Stack
 
-- Lenguaje / runtime: TypeScript en el navegador, motor de Quake compilado a WebAssembly (Emscripten). Motor a
-  definir en la etapa 0 (recomendado: FTEQW). Publicación estática en GitHub Pages.
-- Gestor de dependencias: npm (como CSweb: Vite + TypeScript, sin frameworks de interfaz).
+- Juego y motor: **Quake 3** con el fork de ioquake3 de "The Longest Yard" (`jdarpinian/ioq3`, commit fijo),
+  compilado a WebAssembly con Emscripten 3.1.58. Contenido objetivo: los archivos de Quake Live del anfitrión.
+  Ver [ARCHITECTURE.md](ARCHITECTURE.md) (D-004) y [motor/README.md](motor/README.md).
+- Página: TypeScript en el navegador (como CSweb: Vite + TypeScript, sin frameworks de interfaz; todavía no existe).
+  Publicación estática en GitHub Pages.
 
 ## Comandos
 
-- Instalar: `(completar en la etapa 0)`
-- Build: `(completar en la etapa 0)`
-- Tests: `(completar)` (criterio de aceptación habitual: este comando pasa en verde)
-- Lint / formato: `(completar)`
+- Build del motor: workflow "Motor web" en GitHub Actions ([.github/workflows/motor.yml](.github/workflows/motor.yml));
+  se dispara con cambios en `motor/**` o a mano. Deja el zip como artefacto `motor-web`. No hay toolchain local
+  (esta PC no tiene `emcc`, `make` ni compilador de C).
+- Instalar / build de la página / tests / lint: `(completar cuando exista la página)`
 
 ## Convenciones
 
 - Español rioplatense (voseo) en código, comentarios, interfaz y documentos.
 - Mismo origen que CSweb y CiberWeb (`https://santiagopostacchini.github.io`): toda clave de almacenamiento lleva
-  el prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`. **El motor FTEQW no
-  lo respeta de fábrica** (usa `localStorage` con el nombre del archivo y la cache `user`): hay que parchearlo en
-  `ftejslib.js`/`prejs.js` antes de publicar (ver [docs/research/fteqw-web-red.md](docs/research/fteqw-web-red.md)).
+  el prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`. **La página del fork de ioq3
+  no lo respeta** (`code/web/index.html`: `localStorage` `username`/`model`, Cache API `thelongestyard` y un montaje
+  IDBFS): no la usamos; la página propia monta IDBFS y nombra todo con el prefijo.
+- Cambios al motor: sólo como parches en `motor/parches/` (generados con `git diff` sobre el commit fijado), anotados
+  en la tabla de [motor/README.md](motor/README.md).
 - No tocar otros repos ni sus ramas por accidente: los comandos de Git se ejecutan siempre con `-C C:\dev\QuakeWeb`.
 - Link para unirse estable: `…/QuakeWeb/#CODIGO` (CiberWeb lo usa; ver [PROMPT.md](PROMPT.md)).
 - Pruebas entre pestañas con `?perfil=<nombre>` y del relay con `?relay=1`.
 
 ## Zonas que no se tocan
 
-- Archivos de id Software: nunca se commitean ni se publican (shareware incluido, salvo aprobación explícita).
+- Archivos de id Software (Quake 3, Quake Live, demos): nunca se commitean ni se publican. Se usan sólo desde la
+  instalación local de cada jugador. Nada de ingeniería inversa de los binarios de Quake Live sin confirmar el EULA
+  oficial (el `EULA.txt` de la instalación local no es de Steam).
 - Otros repos (CSweb, CiberWeb) y el Worker TURN de CSweb: sólo con aprobación del usuario.
-- `vendor/` (binarios del motor, si se versionan): sólo se actualizan a propósito y documentando la versión.
+- `motor/parches/`: sólo se cambian a propósito, documentando el porqué.
 
 ## Flujo de trabajo
 

@@ -9,3 +9,10 @@
 /datos/
 /node_modules/
 /dist/
+
+# Datos de Quake 3 / Quake Live y clones locales del motor: nunca se suben
+/baseq3/
+/demoq3/
+/motor/ioq3/
+/motor/build/
+/emsdk/

@@ -40,17 +40,29 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
 - Alternativas descartadas: dominio propio (costo y configuración extra sin beneficio por ahora).
 - Estado: vigente
 
-### D-004: Motor y camino de red (borrador de la etapa 0)
+### D-004: Juego y motor: Quake 3 con ioquake3, apuntando al estilo Quake Live (2026-10-07)
 
-- Contexto: FTEQW trae servidor en el navegador y WebRTC con broker; la red de CSweb (Trystero + relay propio) ya
-  está probada entre redes. Detalle de lo leído en el código: [docs/research/fteqw-web-red.md](docs/research/fteqw-web-red.md).
-- Propuesta (sin aprobar, sin probar): **motor FTEQW; red nativa del motor (A) con un "broker virtual" dentro de la
-  página (A2)** que habla el protocolo binario del broker de FTE y lo conecta con la señalización de CSweb
-  (Trystero) y el Worker TURN de CSweb. Un solo sistema de señalización para sala, código, juego y archivos.
-- Razón: el motor ya maneja un `RTCPeerConnection` por cliente con DataChannel no confiable (igual al canal `game`
-  de CSweb) y recibe servidores TURN por la cvar `net_ice_servers`; el broker son ~150 líneas y no hay que tocar el
-  C del motor. Evita depender del broker de terceros (`master.frag-net.com`).
-- Alternativas: **A1** broker propio en la nube (Worker + Durable Object); **B** red de CSweb inyectada al motor
-  (más trabajo, mejor diagnóstico).
-- Condición para aprobarla: compilar el motor, dos pestañas en un deathmatch y la prueba del relay.
+- Contexto: el encargo recomendaba Quake 1 con FTEQW, pero al usuario le gusta Quake Live, que es de la familia de
+  Quake 3. Detalle de la investigación: [docs/research/fteqw-web-red.md](docs/research/fteqw-web-red.md).
+- Decisión (aprobada por el usuario): **Quake 3 con el fork de ioquake3 de "The Longest Yard"**
+  (`jdarpinian/ioq3`, commit fijo, ver [motor/README.md](motor/README.md)), compilado en GitHub Actions con
+  Emscripten 3.1.58 y con parches propios en `motor/parches/`. Objetivo de contenido: los archivos de Quake Live de
+  quien lo tenga instalado (mapas, texturas, modelos), con la lógica de juego GPL de Quake 3 en QVM, porque la de
+  Quake Live son DLL nativas de x86 que no corren en WebAssembly.
+- Razón: ese fork ya corre el servidor en una pestaña con clientes por WebRTC (HumbleNet), que es el modelo de
+  QuakeWeb; los mapas de Quake Live (BSP 47) tienen la misma estructura que los de Quake 3 más una sección.
+- Alternativas descartadas: Quake 1 con FTEQW (red nativa más simple, pero lejos de Quake Live); ingeniería inversa
+  de las DLL de Quake Live (trabajo grande y sin confirmar que el EULA oficial lo permita).
+- Riesgos: el fork lo mantiene una sola persona; las reglas de juego de Quake Live hay que reescribirlas.
+- Estado: vigente. Reemplaza el borrador anterior de D-004 (FTEQW + broker virtual), que queda descartado.
+
+### D-005: Camino de red (borrador, pendiente de la etapa 0)
+
+- Contexto: el fork usa HumbleNet, con un "peer server" de señalización propio (C++/FlatBuffers) que también reparte
+  los servidores TURN. CSweb usa Trystero + `Link` propio + Worker TURN, ya probado entre redes.
+- Propuesta (sin aprobar, sin probar): dejar la red del motor (DataChannels de HumbleNet) y reemplazar el peer server
+  por uno **virtual dentro de la página** que lo conecte con la señalización de CSweb (Trystero) y el Worker TURN,
+  como hizo `WofWca/quake3.xdc` con otro transporte. Una sola señalización para sala, código, juego y archivos.
+- Alternativas: peer server propio en una VM (no corre en un Worker); red de CSweb inyectada en el motor.
+- Condición para aprobarla: dos pestañas en un deathmatch y la prueba del relay.
 - Estado: pendiente
