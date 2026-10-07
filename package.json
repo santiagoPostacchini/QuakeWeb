@@ -1,0 +1,19 @@
+{
+  "name": "quakeweb",
+  "private": true,
+  "type": "module",
+  "description": "Quake Live en el navegador: partidas entre compañeros sin instalar nada",
+  "scripts": {
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "flatbuffers": "^25.9.23",
+    "ws": "^8.22.0"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "@types/ws": "^8.18.2",
+    "typescript": "^7.0.2"
+  }
+}
