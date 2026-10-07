@@ -19,7 +19,9 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 - Build de ioquakelive: workflow "Motor Quake Live web" ([.github/workflows/motor-ql.yml](.github/workflows/motor-ql.yml)),
   artefacto `motor-ql-web`. `node pruebas/servidor.mjs` sirve pruebas en `http://127.0.0.1:5180/ql/?mapa=campgrounds`.
   Espera el build en `motor/ql/build/` y lee `pak00.pk3` directamente de la instalación Steam local.
-- Instalar / build de la página / tests / lint: `(completar cuando exista la página)`
+- Instalar: `npm ci`. Página: `npm run dev` (Vite, http://localhost:5173; `quakeweb.cargarPakLocal()` en la consola carga
+  el pak00.pk3 de la instalación local, sólo en desarrollo) y `npm run build` (sale en `dist/`).
+- Tests: `npm test` (node --test). Tipos: `npm run typecheck`. Criterio habitual: los dos en verde.
 
 ## Convenciones
 
@@ -38,7 +40,8 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 
 ## Zonas que no se tocan
 
-- Archivos de id Software (Quake 3, Quake Live, demos): nunca se commitean ni se publican. Se usan sólo desde la
+- Archivos de id Software (Quake 3, Quake Live, demos), incluidos el logo y las fuentes de Quake Live: nunca se
+  commitean ni se publican. La interfaz los toma en tiempo de ejecución del pak00.pk3 local (`web/marca.ts`). Se usan sólo desde la
   instalación local de cada jugador. Nada de ingeniería inversa de los binarios de Quake Live sin confirmar el EULA
   oficial (el `EULA.txt` de la instalación local no es de Steam).
 - Otros repos (CSweb, CiberWeb) y el Worker TURN de CSweb: sólo con aprobación del usuario.

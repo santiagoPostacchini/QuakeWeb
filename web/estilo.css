@@ -22,9 +22,10 @@
     --ok: #8fd36a;
     --err: #ff6a4d;
     --focus: #e0c050;
-    --font: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
-    --title: Impact, "Arial Narrow Bold", "Arial Black", sans-serif;
-    --mono: "Lucida Console", Consolas, ui-monospace, monospace;
+    /* fuentes de QL (Handel Gothic, Noto Sans, Droid Sans Mono) cargadas del pak00.pk3 local; sin él, las del sistema */
+    --font: "Noto Sans", "Segoe UI", Arial, sans-serif;
+    --title: "Handel Gothic", Impact, "Arial Black", sans-serif;
+    --mono: "Droid Sans Mono", "Lucida Console", Consolas, ui-monospace, monospace;
     --fs: 14px;
     --pad: 14px;
     --panel-w: 440px;
@@ -60,7 +61,11 @@ body.playing canvas { visibility: visible; }
 }
 
 header { display: flex; gap: 14px; align-items: center; margin-bottom: 18px; }
-.logo { flex: none; width: 52px; height: 52px; background: url("./icon.svg") center / contain no-repeat; }
+/* logo original de QL (del pak00.pk3 local, ver marca.ts); sin él, el título en texto */
+.logo { display: none; flex: none; width: 260px; max-width: 100%; aspect-ratio: 4 / 1; background: var(--logo-ql) left center / contain no-repeat; }
+.con-logo .logo { display: block; }
+.con-logo header h1 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.con-logo header { flex-direction: column; align-items: flex-start; gap: 6px; }
 h1 { margin: 0; }
 .sub { margin: 2px 0 0; }
 
@@ -286,4 +291,10 @@ kbd { padding: 0 5px; font: 700 11px var(--mono); color: var(--text); background
 @media (max-width: 480px) {
     :root { --pad: 12px; }
     .panel::before { letter-spacing: 2px; }
+}
+
+/* Handel Gothic (la de los menús de QL) en títulos, grupos, botones y desplegables; el texto corrido queda en Noto Sans */
+.panel::before, legend, button, .btn-secondary, summary, #loading-text, .server .row span, .files .row span {
+    font-family: var(--title);
+    font-weight: 400;
 }

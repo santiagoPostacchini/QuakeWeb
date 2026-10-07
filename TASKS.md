@@ -138,3 +138,17 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
 - Verificación: `npm test` pasa (22 tests); `npm run typecheck` pasa; sin dependencias nuevas.
 - Hallazgos: se conservan opcionales ausentes, se limpian ofertas al desconectar y cada mensaje usa su propio frame.
 - Pendiente: revisión e integración; probar deathmatch con el motor en dos pestañas (no realizado acá).
+
+### T-011: Interfaz del lobby (estructura de CSweb, piel de Quake Live)
+- Responsable: claude
+- Estado: en curso
+- Rama: exploracion-motor
+- Aceptación: la página tiene las mismas pantallas, medidas y estados que la de CSweb (inicio, unirse por #CODIGO,
+  carga, error, diagnóstico, invitación) con la piel de QL; el logo y las fuentes originales salen del pak00.pk3
+  local; "Crear partida" arranca ioquakelive en el mapa y modo elegidos.
+- Hallazgos (2026-10-07): paleta medida en el menú real (docs/diseno/paleta-quake-live.md). Logo
+  `ui/assets/main_menu/ql_logo.png` y fuentes Handel Gothic, Noto Sans y Droid Sans Mono leídos del índice del pk3
+  sin cargar los 917 MB (`web/zip.ts`, `web/marca.ts`); la lista de mapas sale del pk3 (149). Sin la mira propia: el
+  usuario pidió el logo original. El texto del juego salía en cajas negras (atlas GL_R8 + swizzle, que WebGL 2 no
+  tiene): parche 0007, verificado en el menú y el HUD. Pendiente: arranque del motor desde el lobby, pak00 en
+  IndexedDB, pantalla completa y Ctrl+W, red.
