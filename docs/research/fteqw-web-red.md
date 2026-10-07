@@ -106,8 +106,13 @@ Hallazgos del 2026-10-07, también sólo de leer código y documentación:
 - **Datos**: el sitio original usa el **demo de Quake 3** (`pak0.pk3` de 49.289.300 bytes), que baja de Internet
   Archive y cachea en una Cache API llamada `thelongestyard` (hay que renombrarla a `quakeweb-…`). Con el juego
   completo hay que armar un paquete desde `baseq3/` (el `pak0.pk3` completo es de cientos de MB: no medido, no hay
-  Quake 3 en esta PC). Alternativa libre: OpenArena (assets GPL, cientos de MB). La licencia de redistribución del
-  demo **no está verificada**.
+  Quake 3 en esta PC). Alternativa libre: OpenArena (assets GPL, cientos de MB). Sobre el demo, según páginas de empaquetadores de
+  distribuciones (FreshPorts, TinyCore, pkgsrc), tiene licencia restrictiva de Loki: **no se puede redistribuir**, y trae
+  4 mapas y 6 personajes. Entonces no podría viajar del anfitrión a los invitados ni publicarse; cada jugador tendría que
+  bajarlo él mismo (como hace thelongestyard). No leí la licencia original.
+- **Quake Live**: su motor y su código de juego son cerrados; no hay forma de correrlos en ioq3. No verifiqué el EULA de
+  Quake Live (la búsqueda sólo devolvió el de Quake 3 Arena, que prohíbe ingeniería inversa y obras derivadas). Quake
+  Live no está instalado en esta PC.
 - **Riesgos**: depende de un fork de una sola persona (22 estrellas) y de su fork de HumbleNet (5 estrellas; el
   HumbleNet original, 574 estrellas, no recibe cambios desde enero de 2022); hay que modificar el motor para el
   origen compartido (la Cache API `thelongestyard` y el `localStorage`) y para el transporte de archivos; no se
