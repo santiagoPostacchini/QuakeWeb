@@ -50,17 +50,22 @@ jobs:
           ./emsdk install "$EMSDK_VERSION"
           ./emsdk activate "$EMSDK_VERSION"
 
+      # BUILD_GAME_QVM=1: el Makefile lo apaga para Emscripten, pero sin la lógica de juego en QVM
+      # (ztm-flexible-hud.pk3) los mapas de Quake Live no tienen reglas: las DLL de QL no corren en la web.
+      # Los QVM se compilan con herramientas nativas (q3lcc, q3asm) hechas con el gcc del runner.
       - name: Compilar
         env:
           ARCHIVE: 1
         run: |
           source emsdk/emsdk_env.sh
           cd ioq3
-          emmake make release -j"$(nproc)"
+          emmake make release BUILD_GAME_QVM=1 -j"$(nproc)"
 
       - name: Listar lo generado
         run: |
           ls -la ioq3/build/release-emscripten-wasm32/
+          find ioq3/build/release-emscripten-wasm32 -name '*.qvm' -o -name '*.pk3' | sort
+          test -f ioq3/build/release-emscripten-wasm32/ztm-flexible-hud.pk3
           ls -la ioq3/build/*.zip
 
       - uses: actions/upload-artifact@v4
