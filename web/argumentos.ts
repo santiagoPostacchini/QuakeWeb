@@ -4,6 +4,7 @@ export type OpcionesPartida = {
     jugadoresMax: number;
     servidor: string;
     jugador: string;
+    red?: { codigo: string; invitado: boolean };
 };
 
 export function sanearCvar(valor: string): string {
@@ -13,6 +14,7 @@ export function sanearCvar(valor: string): string {
 export const citarCvar = (valor: string) => `"${sanearCvar(valor)}"`;
 
 export function armarArgumentos(opciones: OpcionesPartida): string[] {
+    if (opciones.red && !/^[ABCDEFGHJKMNPQRSTUVWXYZ23456789]{6}$/.test(opciones.red.codigo)) throw new Error('Código de partida inválido.');
     if (!/^[a-z0-9_-]+$/i.test(opciones.mapa)) throw new Error('Elegí un mapa válido.');
     if (![0, 1, 3, 4, 5].includes(opciones.modo)) throw new Error('Elegí un modo válido.');
     if (!Number.isInteger(opciones.jugadoresMax) || opciones.jugadoresMax < 2 || opciones.jugadoresMax > 16) {
@@ -20,11 +22,14 @@ export function armarArgumentos(opciones: OpcionesPartida): string[] {
     }
     return [
         '+set', 'com_build', '1', '+set', 'sv_pure', '0',
-        '+set', 'r_mode', '-2', '+set', 'net_enabled', '0',
+        '+set', 'r_mode', '-2', '+set', 'net_enabled', opciones.red ? '1' : '0',
+        ...(opciones.red ? ['+set', 'net_peer_server', 'ws://quakeweb.senal/',
+            ...(!opciones.red.invitado ? ['+set', 'net_server_name', opciones.red.codigo] : [])] : []),
         '+set', 'g_gametype', String(opciones.modo),
         '+set', 'sv_maxclients', String(opciones.jugadoresMax),
         '+set', 'sv_hostname', citarCvar(opciones.servidor),
-        '+set', 'name', citarCvar(opciones.jugador), '+map', opciones.mapa,
+        '+set', 'name', citarCvar(opciones.jugador),
+        ...(opciones.red?.invitado ? ['+connect', `${opciones.red.codigo}.humblenet`] : ['+map', opciones.mapa]),
     // sys_main.c agrega comillas a cada argv que contiene espacios. Dividirlos evita
     // duplicar las comillas; al unir argv, el motor recupera exactamente el valor citado.
     ].flatMap(argumento => argumento.split(' '));

@@ -74,12 +74,16 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
     `viewBloodBlend`) y el parámetro de shader `novlcollapse` es desconocido. El menú de Quake 3 no tiene su arte.
 
 ### T-002: Etapa 1, crear y unirse
-- Responsable: claude
-- Estado: pendiente
-- Rama:
+- Responsable: codex (página); claude (revisión e integración).
+- Estado: implementación acotada hecha; pendiente validación con el motor entre PCs.
+- Rama: codex/unirse-codigo (base exploracion-motor).
 - Aceptación: un invitado en otra PC de la misma red entra con el link y juega; la segunda vez no vuelve a bajar
   los archivos; el link `…/QuakeWeb/#CODIGO` lleva directo a la partida.
-- Hallazgos:
+- Hecho: sala Nostr/torrent, socket virtual HumblePeer, info del anfitrión, código/link y argumentos host/invitado.
+- Hecho: huella del índice pak00, archivos propios en IndexedDB por perfil, invitación y diagnóstico sin credenciales.
+- Verificación: npm test (34 tests), npm run typecheck y npm run build pasan; sin dependencias nuevas.
+- Hallazgos: ICE host:puerto; TLS/TCP excluidos; TURN sólo con VITE_TURN_ENDPOINT (timeout 4 s); no se transfiere pak00.
+- Pendiente: probar juego real entre PCs y relay con el port HumbleNet del motor; no realizado acá.
 
 ### T-003: Etapa 2, entre redes
 - Responsable: claude
