@@ -20,3 +20,4 @@
 # Configuración local de Claude Code
 /.claude/
 /motor/ql/fuente/
+/motor/ql/build/

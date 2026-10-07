@@ -1,0 +1,36 @@
+From cd2e2bc90954d3a25e4187f2f42d4a879c4a6706 Mon Sep 17 00:00:00 2001
+From: Santiago Postacchini <postacchinisantiago@gmail.com>
+Date: Wed, 7 Oct 2026 15:55:03 -0300
+Subject: [PATCH 2/2] Emscripten: motor con -fPIC y qagame sin vmMain exportado
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ Makefile | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+diff --git a/Makefile b/Makefile
+index 2f9456e..17fd4ba 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1000,6 +1000,8 @@ ifeq ($(PLATFORM),emscripten)
+   CLIENT_LDFLAGS+=-s EXIT_RUNTIME=1
+   # QuakeWeb: el motor carga la lógica de juego (cgame, qagame, ui) con dlopen, como módulos wasm.
+   CLIENT_LDFLAGS+=-s MAIN_MODULE=1
++  # Con MAIN_MODULE todo el código del motor tiene que ser PIC (si no, wasm-ld: "recompile with -fPIC").
++  BASE_CFLAGS+=-fPIC
+   CLIENT_LDFLAGS+=-s EXPORT_ES6
+   CLIENT_LDFLAGS+=-s EXPORT_NAME=quakelive
+ 
+@@ -1031,7 +1033,8 @@ ifeq ($(PLATFORM),emscripten)
+   SHLIBCFLAGS=-fPIC
+   # QuakeWeb: SIDE_MODULE=2 descarta lo que no se exporta; el motor sólo busca dllEntry y vmMain.
+   # Con SIDE_MODULE=1 cgame pesaba 14 MB, más que el tope de Chrome para compilar wasm en el hilo principal.
+-  SHLIBLDFLAGS=-s SIDE_MODULE=2 -s EXPORTED_FUNCTIONS=_dllEntry,_vmMain
++  # qagame sólo exporta dllEntry (estilo QL: devuelve vmMain por puntero); cgame y ui exportan los dos.
++  SHLIBLDFLAGS=-s SIDE_MODULE=2 -s EXPORTED_FUNCTIONS=_dllEntry,_vmMain -Wno-undefined
+ 
+ else # ifeq emscripten
+ 
+-- 
+2.45.1.windows.1
+

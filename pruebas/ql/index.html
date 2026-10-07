@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba: ioquakelive en la web</title>
+<style>
+    html, body { margin: 0; height: 100%; background: #000; color: #ccc; font: 13px/1.4 monospace; }
+    /* SDL fija el tamaño del canvas con estilo inline (r_mode -2 = tamaño de la pantalla): se ajusta a la ventana */
+    html, body { overflow: hidden; }
+    canvas { display: block; width: 100% !important; height: 100% !important; object-fit: contain; }
+    #registro { position: fixed; left: 0; right: 0; bottom: 0; max-height: 40%; overflow: auto; margin: 0; padding: 8px;
+        background: rgba(0, 0, 0, .75); white-space: pre-wrap; }
+    #registro.oculto { display: none; }
+</style>
+</head>
+<body>
+<canvas id="canvas" oncontextmenu="event.preventDefault()"></canvas>
+<pre id="registro">Cargando…  (F2 muestra u oculta este registro)</pre>
+<script type="module">
+// Prueba del port de ioquakelive (D-006): motor + lógica de juego de QL como módulos wasm (iobin.pk3) y
+// el pak00.pk3 de la instalación local. Uso: /ql/?mapa=campgrounds&bots=2
+const params = new URLSearchParams(location.search);
+const mapa = (params.get('mapa') ?? 'campgrounds').replace(/[^a-z0-9_-]/gi, '');
+const bots = Math.min(Number(params.get('bots') ?? 0) || 0, 8);
+const registro = document.getElementById('registro');
+const t0 = performance.now();
+
+function anotar(linea) {
+    const s = ((performance.now() - t0) / 1000).toFixed(1).padStart(6);
+    registro.textContent += `\n[${s}s] ${linea}`;
+    registro.scrollTop = registro.scrollHeight;
+}
+addEventListener('keydown', (e) => { if (e.key === 'F2') registro.classList.toggle('oculto'); });
+addEventListener('error', (e) => anotar(`ERROR de la página: ${e.message}`));
+addEventListener('unhandledrejection', (e) => anotar(`ERROR de la página: ${e.reason}`));
+
+async function bajar(url) {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`${url}: HTTP ${r.status}`);
+    const datos = new Uint8Array(await r.arrayBuffer());
+    anotar(`${url}: ${(datos.length / 1048576).toFixed(1)} MB`);
+    return datos;
+}
+
+// iobin.pk3: cgame/qagame/ui en wasm (el motor los extrae y los carga con dlopen); pak01.pk3: menús de ioquakelive
+const archivos = Promise.all([
+    bajar('/datos/baseq3/pak00.pk3'),
+    bajar('/motor-ql/baseq3/iobin.pk3'),
+    bajar('/motor-ql/baseq3/pak01.pk3'),
+]);
+
+const argumentos = [
+    '+set', 'net_enabled', '0',
+    '+set', 'r_mode', '-2',
+    '+set', 'sv_pure', '0',
+    '+set', 'com_build', '1', // ioquakelive: sin Steam
+    '+set', 'developer', '1',
+    '+set', 'bot_enable', bots ? '1' : '0',
+    '+devmap', mapa,
+];
+for (let i = 0; i < bots; i++) argumentos.push('+addbot', 'sarge', '2');
+anotar(`argumentos: ${argumentos.join(' ')}`);
+
+const quakelive = (await import('/motor-ql/quakelive.wasm32.js')).default;
+quakelive({
+    canvas: document.getElementById('canvas'),
+    arguments: argumentos,
+    locateFile: (archivo) => `/motor-ql/${archivo}`,
+    print: (s) => anotar(s),
+    printErr: (s) => anotar(`! ${s}`),
+    onAbort: (que) => anotar(`MOTOR ABORTADO: ${que}`),
+    preRun: [async (modulo) => {
+        modulo.addRunDependency('quakeweb-archivos');
+        try {
+            const [pak00, iobin, pak01] = await archivos;
+            modulo.FS.mkdirTree('/baseq3');
+            modulo.FS.writeFile('/baseq3/pak00.pk3', pak00, { canOwn: true });
+            modulo.FS.writeFile('/baseq3/iobin.pk3', iobin, { canOwn: true });
+            modulo.FS.writeFile('/baseq3/pak01.pk3', pak01, { canOwn: true });
+            anotar('archivos montados en /baseq3');
+        } catch (e) {
+            anotar(`no se pudieron cargar los archivos: ${e.message}`);
+        } finally {
+            modulo.removeRunDependency('quakeweb-archivos');
+        }
+    }],
+}).then(() => anotar('motor iniciado'), (e) => anotar(`el motor no arrancó: ${e}`));
+</script>
+</body>
+</html>

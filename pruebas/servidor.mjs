@@ -1,6 +1,7 @@
 // Servidor estático para pruebas locales del motor. Sin dependencias: `node pruebas/servidor.mjs`.
 // - /                → pruebas/ (páginas de prueba)
-// - /motor/          → motor/build/release-emscripten-wasm32/ (el zip del workflow "Motor web", descomprimido)
+// - /motor/          → motor/build/release-emscripten-wasm32/ (artefacto del workflow "Motor web")
+// - /motor-ql/       → motor/ql/build/ (artefacto del workflow "Motor Quake Live web", ioquakelive)
 // - /datos/baseq3/X  → los .pk3 de la instalación local de Quake Live (sólo lectura, nunca se copian al repo)
 // Escucha sólo en 127.0.0.1: los archivos del juego no salen de esta PC.
 import { createServer } from 'node:http';
@@ -13,6 +14,7 @@ const raiz = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const BASEQ3 = process.env.QL_BASEQ3 ?? 'C:\\Program Files (x86)\\Steam\\steamapps\\common\\Quake Live\\baseq3';
 
 const RUTAS = [
+    { prefijo: '/motor-ql/', dir: join(raiz, 'motor', 'ql', 'build') },
     { prefijo: '/motor/', dir: join(raiz, 'motor', 'build', 'release-emscripten-wasm32') },
     { prefijo: '/datos/baseq3/', dir: BASEQ3, soloExt: ['.pk3'] },
     { prefijo: '/', dir: join(raiz, 'pruebas') },
