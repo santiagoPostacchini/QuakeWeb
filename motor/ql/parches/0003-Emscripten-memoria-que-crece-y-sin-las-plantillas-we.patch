@@ -1,0 +1,41 @@
+From 7d71e92cfce95728642eefb34cb6335c3b1fd179 Mon Sep 17 00:00:00 2001
+From: Santiago Postacchini <postacchinisantiago@gmail.com>
+Date: Wed, 7 Oct 2026 15:58:48 -0300
+Subject: [PATCH 3/3] Emscripten: memoria que crece y sin las plantillas web
+ borradas
+
+Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>
+---
+ Makefile | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
+
+diff --git a/Makefile b/Makefile
+index 17fd4ba..d8715bc 100644
+--- a/Makefile
++++ b/Makefile
+@@ -991,7 +991,9 @@ ifeq ($(PLATFORM),emscripten)
+ 
+   CLIENT_CFLAGS+=-s USE_SDL=2
+ 
+-  CLIENT_LDFLAGS+=-s TOTAL_MEMORY=256MB
++  # QuakeWeb: la memoria tiene que poder crecer: cada módulo de juego cargado con dlopen reserva sus datos
++  # (ui pide más de 256 MB en total y abortaba con "Cannot enlarge memory arrays").
++  CLIENT_LDFLAGS+=-s INITIAL_MEMORY=256MB -s ALLOW_MEMORY_GROWTH=1 -s MAXIMUM_MEMORY=2GB
+   CLIENT_LDFLAGS+=-s STACK_SIZE=5MB
+   CLIENT_LDFLAGS+=-s MIN_WEBGL_VERSION=1 -s MAX_WEBGL_VERSION=2
+ 
+@@ -1118,10 +1120,7 @@ ifeq ($(PLATFORM),emscripten)
+   endif
+ 
+   ifneq ($(BUILD_CLIENT),0)
+-    TARGETS += $(B)/$(CLIENTBIN).html
+-    ifneq ($(EMSCRIPTEN_PRELOAD_FILE),1)
+-      TARGETS += $(B)/$(CLIENTBIN)-config.json
+-    endif
++    # QuakeWeb: ioquakelive borró code/web (client.html, client-config.json); la página es de QuakeWeb.
+ 
+     ifneq ($(USE_RENDERER_DLOPEN),0)
+       GENERATEDTARGETS += $(B)/$(CLIENTBIN).$(ARCH).wasm
+-- 
+2.45.1.windows.1
+
