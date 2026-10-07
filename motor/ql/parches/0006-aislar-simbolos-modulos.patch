@@ -1,0 +1,14 @@
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -1042,7 +1042,9 @@ ifeq ($(PLATFORM),emscripten)
+   DEBUG_LDFLAGS=$(DEBUG_CFLAGS)
+ 
+   SHLIBEXT=wasm
+-  SHLIBCFLAGS=-fPIC
++  # Cada modulo mantiene sus variables y funciones: sv_fps/sv_mapname tienen
++  # tipos distintos en el motor y qagame. Solo Q_EXPORT expone la entrada ABI.
++  SHLIBCFLAGS=-fPIC -fvisibility=hidden
+   # QuakeWeb: SIDE_MODULE=2 descarta lo que no se exporta; el motor sólo busca dllEntry y vmMain.
+   # Con SIDE_MODULE=1 cgame pesaba 14 MB, más que el tope de Chrome para compilar wasm en el hilo principal.
+   # qagame sólo exporta dllEntry (estilo QL: devuelve vmMain por puntero); cgame y ui exportan los dos.
