@@ -43,22 +43,35 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
 
 ### T-006: Build web del motor en GitHub Actions
 - Responsable: claude
-- Estado: en curso
+- Estado: hecho
 - Rama: exploracion-motor
 - Aceptación: el workflow "Motor web" termina en verde con los parches aplicados y deja el artefacto `motor-web`
   con el cliente, el servidor dedicado y `ztm-flexible-hud.pk3`.
-- Hallazgos: workflow y `motor/README.md` escritos. Falta el repo remoto (el usuario instaló `gh`; falta iniciar
-  sesión) para correrlo.
+- Hallazgos: repo público `santiagoPostacchini/QuakeWeb`. El build tarda ~1 min 20 s. El Makefile del fork apaga los
+  QVM para la web (se piden con `BUILD_GAME_QVM=1`) y con `-j` el zip quedaba sin `ztm-flexible-hud.pk3` (se suben los
+  archivos sueltos). Con Vorbis el cliente pasa de 2,07 a 2,23 MB.
 
 ### T-007: Mapas de Quake Live en ioq3
 - Responsable: claude
-- Estado: en curso
+- Estado: hecho
 - Rama: exploracion-motor
 - Aceptación: con el build de T-006 y los archivos de Quake Live de la PC del usuario (sin publicarlos), un mapa de
   QL (por ejemplo `campgrounds`) carga y se puede recorrer en el navegador, con captura.
 - Hallazgos: parche `motor/parches/0001-bsp47-quake-live.patch` (acepta BSP 47). Verificado en 3 mapas que las 17
-  secciones comunes tienen los tamaños de registro de Quake 3; la 18ª (nº 17) son múltiplos de 128 bytes. Sin probar
-  en el motor. Riesgos a medir: shaders, menús y sonidos con nombres distintos a los de Quake 3.
+  secciones comunes tienen los tamaños de registro de Quake 3; la 18ª (nº 17) son múltiplos de 128 bytes.
+  - Prueba 1 (2026-10-07, build `37666614058`, `pruebas/mapa-ql/?mapa=campgrounds`, panel del navegador de Claude):
+    `pak00.pk3` (917,5 MiB) llega en 7,1 s desde localhost; el motor monta 9285 archivos y ejecuta el `default.cfg`
+    de QL; compilar los 57 shaders GLSL lleva 2,8 s. **El mapa carga** en el servidor y en el renderer ("loaded 3329
+    faces, 404 meshes, 186 trisurfs"). Corta en la lógica de juego: `DEFAULT_MODEL (sarge) failed to register`
+    (el ícono del jugador es `.png` en QL; parche 0002) y faltan 105 sonidos (`.ogg` en QL; build con Vorbis).
+  - Prueba 2 (build `37667246540`, con parche 0002 y Vorbis): **el jugador entra a `campgrounds` y se mueve** (W/D
+    desde el panel del navegador). Página → "entered the game" en 15,2 s (8,8 s son leer `pak00.pk3` del disco local;
+    `CL_InitCGame` 2,4 s). Sonidos faltantes: de 105 a 33. Captura local (no se versiona: es arte de id):
+    `motor/build/capturas/t007-campgrounds.jpg`.
+  - Pendiente de pulido (no bloquea): la mira sale como un cuadrado blanco (Quake 3 busca `crosshaira…j`, QL trae
+    `crosshair1…N`), 33 sonidos con otros nombres (`sound/feedback/*`, `menu*.wav`), `scripts/arenas.txt` de QL supera
+    el tope de 8192 bytes de la UI de Quake 3, faltan imágenes de algunos shaders (`menuback`, `teleportEffect`,
+    `viewBloodBlend`) y el parámetro de shader `novlcollapse` es desconocido. El menú de Quake 3 no tiene su arte.
 
 ### T-002: Etapa 1, crear y unirse
 - Responsable: claude

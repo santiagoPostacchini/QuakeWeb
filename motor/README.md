@@ -37,7 +37,7 @@ Los datos del juego no están en el build: se cargan en el navegador desde la in
 | Archivo | Qué hace | Estado |
 |---|---|---|
 | `0001-bsp47-quake-live.patch` | Acepta mapas BSP versión 47 (Quake Live) además de la 46. La 47 tiene una sección extra (nº 17) que se ignora. | probado: `campgrounds` carga en el servidor y en el renderer (3329 caras) |
-| `0002-cgame-iconos-png-quake-live.patch` | La lógica de juego acepta el ícono del jugador en `.png`/`.jpg` (Quake Live no trae `.tga`). Sin esto se corta con `DEFAULT_MODEL (sarge) failed to register`. | escrito, sin probar |
+| `0002-cgame-iconos-png-quake-live.patch` | La lógica de juego acepta el ícono del jugador en `.png`/`.jpg` (Quake Live no trae `.tga`). Sin esto se corta con `DEFAULT_MODEL (sarge) failed to register`. | probado: el jugador entra a `campgrounds` |
 
 Los parches se generan con `git diff` sobre el commit fijado y tienen que aplicar con `git apply` sin conflictos.
 
