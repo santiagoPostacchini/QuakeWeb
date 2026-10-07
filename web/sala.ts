@@ -98,6 +98,7 @@ export function entrarSala(codigo: string, ice: RTCIceServer[], anfitrion: InfoP
     return {
         codigo,
         info: () => info,
+        anfitrion: () => host,
         instalar() {
             if (instalada) throw new Error('El motor ya tiene un socket de señalización.');
             instalada = true;

@@ -15,6 +15,17 @@
 
 ## Tareas
 
+### T-012: Descarga directa de pak00 en enjambre
+- Responsable: codex; rama: codex/archivos-p2p (base base-archivos).
+- Estado: hecho (implementación y verificaciones automáticas); pendiente prueba entre PCs.
+- Hecho: sala de archivos separada, STUN fijo y bloqueo de rutas relay/desconocidas mediante getStats.
+- Hecho: manifiesto SHA-256, trozos de 2 MiB, fuentes parciales, ventana, timeout/reintento y veto de datos corruptos.
+- Hecho: IndexedDB por perfil, reanudación verificada, pak completo guardado, marca/mapas y progreso con diagnóstico.
+- Hecho: servicio limitado a 2 trozos simultáneos y 2 paquetes por par; sin dependencias nuevas.
+- Verificación: npm test (40 tests), npm run typecheck y npm run build pasan.
+- Pendiente: validar transferencia de ~900 MB, cuota de IndexedDB y rutas LAN/STUN entre navegadores reales.
+- Hallazgos: el manifiesto se acepta sólo del par anfitrión identificado por la sala del juego; TURN del juego no se comparte.
+
 Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas a medida que se empiezan.
 
 ### T-001: Etapa 0, exploración del motor y de la red
