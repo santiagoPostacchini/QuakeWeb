@@ -42,7 +42,8 @@ function mostrarInfo(info: InfoPartida | null) {
     $('join-map').textContent = info ? `${info.mapa} · ${MODOS.find(([v]) => Number(v) === info.modo)?.[1] ?? info.modo}` : '—';
     $('join-players').textContent = info ? `${info.jugadores} / ${info.max}` : '—';
     $('invite-players').textContent = `${info?.jugadores ?? 1} jugador${info?.jugadores === 1 ? '' : 'es'}`;
-    if (!bajando) $('join-hint').textContent = info ? 'Podés descargar de los jugadores o elegir tu carpeta Quake Live.' : 'Buscando al anfitrión…';
+    if (!bajando) $('join-hint').textContent = !info ? 'Buscando al anfitrión…'
+        : pak00 ? 'Apretá Unirse para entrar.' : 'Podés descargar de los jugadores o elegir tu carpeta Quake Live.';
     diagnostico();
 }
 async function buscar(codigo: string | null) {
