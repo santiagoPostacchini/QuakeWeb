@@ -73,7 +73,7 @@ export function crearPuenteAnfitrion(iceServers: ServidorIce[], enviar: (par: st
 export function instalarSocket(crear: () => TransporteSenal): () => void {
     const real = window.WebSocket;
     window.WebSocket = new Proxy(real, { construct(objeto, args) {
-        if (String(args[0]) !== URL_SENAL) return Reflect.construct(objeto, args);
+        if (!String(args[0]).startsWith(URL_SENAL.slice(0, -1))) return Reflect.construct(objeto, args);
         const protocolos = args[1];
         if (protocolos !== 'humblepeer' && !(Array.isArray(protocolos) && protocolos.includes('humblepeer'))) throw new TypeError('Falta humblepeer.');
         return new SocketSenal(crear());

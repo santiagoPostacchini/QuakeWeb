@@ -1,3 +1,4 @@
+import { URL_SENAL } from './red-util.ts';
 export type OpcionesPartida = {
     mapa: string;
     modo: number;
@@ -23,7 +24,7 @@ export function armarArgumentos(opciones: OpcionesPartida): string[] {
     return [
         '+set', 'com_build', '1', '+set', 'sv_pure', '0',
         '+set', 'r_mode', '-2', '+set', 'net_enabled', opciones.red ? '1' : '0',
-        ...(opciones.red ? ['+set', 'net_peer_server', 'ws://quakeweb.senal/',
+        ...(opciones.red ? ['+set', 'net_peer_server', citarCvar(URL_SENAL), // entre comillas: "//" es comentario en la consola
             ...(!opciones.red.invitado ? ['+set', 'net_server_name', opciones.red.codigo] : [])] : []),
         '+set', 'g_gametype', String(opciones.modo),
         '+set', 'sv_maxclients', String(opciones.jugadoresMax),

@@ -57,7 +57,7 @@ test('argumentos de anfitrión e invitado con alias y sin mapa local al conectar
     const opciones = { mapa: 'campgrounds', modo: 0, jugadoresMax: 8, servidor: 'Sala', jugador: 'Pepe' };
     const host = armarArgumentos({ ...opciones, red: { codigo: 'ABC234', invitado: false } });
     assert.equal(host[host.indexOf('net_enabled') + 1], '1');
-    assert.equal(host[host.indexOf('net_peer_server') + 1], URL_SENAL);
+    assert.equal(host[host.indexOf('net_peer_server') + 1], `"${URL_SENAL}"`);
     assert.equal(host[host.indexOf('net_server_name') + 1], 'ABC234'); assert.ok(host.includes('+map'));
     const guest = armarArgumentos({ ...opciones, red: { codigo: 'ABC234', invitado: true } });
     assert.ok(!guest.includes('+map')); assert.ok(!guest.includes('net_server_name'));
