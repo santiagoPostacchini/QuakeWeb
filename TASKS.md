@@ -15,6 +15,15 @@
 
 ## Tareas
 
+### T-013: Publicación en GitHub Pages
+- Responsable: claude
+- Estado: en curso
+- Rama: exploracion-motor (workflow `.github/workflows/pages.yml`; el entorno github-pages admite main y exploracion-motor).
+- Aceptación: https://santiagopostacchini.github.io/QuakeWeb/ crea y une partidas desde otra PC.
+- Hallazgos: de pak01.pk3 (contenido del repo de ioquakelive) sólo se publican `ui/main.menu` y
+  `scripts/key_master.shader`; sus modelos, texturas y sonidos (gibs, Overload, obelisco) no tienen licencia clara y
+  parecen de id. El artefacto del motor dura 30 días: después hay que recompilarlo antes de publicar.
+
 ### T-012: Descarga directa de pak00 en enjambre
 - Responsable: codex; rama: codex/archivos-p2p (base base-archivos).
 - Estado: hecho (implementación y verificaciones automáticas); pendiente prueba entre PCs.
@@ -23,7 +32,8 @@
 - Hecho: IndexedDB por perfil, reanudación verificada, pak completo guardado, marca/mapas y progreso con diagnóstico.
 - Hecho: servicio limitado a 2 trozos simultáneos y 2 paquetes por par; sin dependencias nuevas.
 - Verificación: npm test (40 tests), npm run typecheck y npm run build pasan.
-- Pendiente: validar transferencia de ~900 MB, cuota de IndexedDB y rutas LAN/STUN entre navegadores reales.
+- Verificado (claude, 2026-10-07): dos pestañas, 917,5 MB en ~3 min (5–6 MB/s, una fuente), ruta host/prflx; el
+  invitado entra después y al recargar no vuelve a bajar. Pendiente: entre PCs y entre redes.
 - Hallazgos: el manifiesto se acepta sólo del par anfitrión identificado por la sala del juego; TURN del juego no se comparte.
 
 Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas a medida que se empiezan.
