@@ -9,7 +9,7 @@ pestaña de quien crea la partida corre el servidor; los demás entran con un li
 TURN si la red lo exige, y reciben del anfitrión los archivos del juego. Los archivos de Quake no se publican: los
 pone cada anfitrión desde su instalación (Steam o GOG).
 
-Se publica en `https://santiagopostacchini.github.io/QuakeWeb/` y aparece en el hub de juegos (HubJuegos).
+Se publica en `https://santiagopostacchini.github.io/QuakeWeb/` y aparece en el hub de juegos, CiberWeb (`https://santiagopostacchini.github.io/CiberWeb/`).
 
 **Estado**: sin empezar. El plan completo está en [PROMPT.md](PROMPT.md).
 

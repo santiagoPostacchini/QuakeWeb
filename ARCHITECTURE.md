@@ -15,7 +15,7 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
 
 - Contexto: el dueño quiere sumar más juegos al modelo de CSweb y una página que los reúna.
 - Decisión: QuakeWeb es un repo y un sitio propios. Copia y adapta código de CSweb, sin depender de él. El hub
-  (HubJuegos) es otro proyecto que sólo enlaza a los juegos.
+  (CiberWeb) es otro proyecto que sólo enlaza a los juegos y guarda sus propios datos de cada uno.
 - Razón: cada juego evoluciona a su ritmo sin arriesgar los otros; si un juego recibe un reclamo legal, no arrastra
   a los demás repos.
 - Alternativas descartadas: monorepo con un núcleo compartido (más reuso, pero acopla los juegos y el riesgo).
@@ -34,8 +34,8 @@ Una entrada por decisión. No se borran: si una cambia, se marca como reemplazad
 ### D-003: Mismo origen que CSweb y el hub (2026-10-07)
 
 - Contexto: todo se publica bajo `https://santiagopostacchini.github.io`.
-- Decisión: aprovechar el origen compartido (Worker TURN ya autorizado, el hub lee `juego.json` sin CORS) y
-  aislar el almacenamiento con el prefijo `quakeweb:`.
+- Decisión: aprovechar el origen compartido (el Worker TURN ya lo autoriza) y aislar el almacenamiento con el
+  prefijo `quakeweb:`.
 - Razón: evita configurar otro Worker y otro dominio; el riesgo de pisarse con CSweb se controla con prefijos.
 - Alternativas descartadas: dominio propio (costo y configuración extra sin beneficio por ahora).
 - Estado: vigente

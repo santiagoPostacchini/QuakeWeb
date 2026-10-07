@@ -30,7 +30,7 @@ Las etapas completas están en [PROMPT.md](PROMPT.md); acá se parten en tareas 
 - Estado: pendiente
 - Rama:
 - Aceptación: un invitado en otra PC de la misma red entra con el link y juega; la segunda vez no vuelve a bajar
-  los archivos; `juego.json` publicado según el contrato del hub.
+  los archivos; el link `…/QuakeWeb/#CODIGO` lleva directo a la partida.
 - Hallazgos:
 
 ### T-003: Etapa 2, entre redes

@@ -18,15 +18,15 @@ Lectura obligatoria para cualquier agente antes de tocar código. Mantenerlo cor
 ## Convenciones
 
 - Español rioplatense (voseo) en código, comentarios, interfaz y documentos.
-- Mismo origen que CSweb y el hub (`https://santiagopostacchini.github.io`): toda clave de almacenamiento lleva el
-  prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`.
-- `juego.json` en la raíz del sitio, según el contrato de HubJuegos (ver [PROMPT.md](PROMPT.md)).
+- Mismo origen que CSweb y CiberWeb (`https://santiagopostacchini.github.io`): toda clave de almacenamiento lleva
+  el prefijo `quakeweb:` y las bases de IndexedDB, Web Locks y caches se llaman `quakeweb-…`.
+- Link para unirse estable: `…/QuakeWeb/#CODIGO` (CiberWeb lo usa; ver [PROMPT.md](PROMPT.md)).
 - Pruebas entre pestañas con `?perfil=<nombre>` y del relay con `?relay=1`.
 
 ## Zonas que no se tocan
 
 - Archivos de id Software: nunca se commitean ni se publican (shareware incluido, salvo aprobación explícita).
-- Otros repos (CSweb, HubJuegos) y el Worker TURN de CSweb: sólo con aprobación del usuario.
+- Otros repos (CSweb, CiberWeb) y el Worker TURN de CSweb: sólo con aprobación del usuario.
 - `vendor/` (binarios del motor, si se versionan): sólo se actualizan a propósito y documentando la versión.
 
 ## Flujo de trabajo
