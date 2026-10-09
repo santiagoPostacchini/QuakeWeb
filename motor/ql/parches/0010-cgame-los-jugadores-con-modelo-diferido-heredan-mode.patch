@@ -1,0 +1,28 @@
+From 6621ef7958bd8762e9907d7417587d46c9549719 Mon Sep 17 00:00:00 2001
+From: Santiago Postacchini <postacchinisantiago@gmail.com>
+Date: Thu, 8 Oct 2026 23:16:26 -0300
+Subject: [PATCH 10/11] cgame: los jugadores con modelo diferido heredan
+ modelScale
+
+CG_CopyClientInfoModel no copiaba modelScale. Con cg_deferPlayers 1 (default de QL), el jugador que entra
+con la partida en marcha quedaba con modelScale 0 y CG_Player escalaba sus tres partes por cero: se veia el
+nombre y la sombra, pero no el modelo.
+---
+ code/cgame/cg_players.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/code/cgame/cg_players.c b/code/cgame/cg_players.c
+index b45745e5..7459ffba 100644
+--- a/code/cgame/cg_players.c
++++ b/code/cgame/cg_players.c
+@@ -569,6 +569,7 @@ static void CG_CopyClientInfoModel(clientInfo_t* from, clientInfo_t* to) {
+     to->headSkin = from->headSkin;
+     to->modelIcon = from->modelIcon;
+ 
++    to->modelScale = from->modelScale;
+     to->newAnims = from->newAnims;
+ 
+     memcpy(to->animations, from->animations, sizeof(to->animations));
+-- 
+2.55.0.windows.5
+

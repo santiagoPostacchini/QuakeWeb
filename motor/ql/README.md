@@ -33,6 +33,8 @@ exportan con `git format-patch <commit fijado>..HEAD -o ../parches/`. Codex pued
 | `0007` | Atlas de fuentes en RGBA para la web: WebGL 2 no tiene `GL_TEXTURE_SWIZZLE` y el atlas `GL_R8` dibujaba cada letra dentro de una caja negra. | build |
 | `0008` | El marcador no suelta las teclas: al abrirlo, cgame levanta `KEYCATCH_SCORES` y `Key_SetCatcher` llamaba a `Key_ClearStates`, que mandaba `-scores` y lo cerraba con Tab mantenido. Falla también del ioquakelive nativo. | build |
 | `0009` | Red HumbleNet (WebRTC, BSD-3) traída del fork web de ioquake3: `net_peer_server` (señalización) y `net_server_name` (sala); el invitado entra con `connect SALA.humblenet`. Sin `-lc++` explícito: `MAIN_MODULE=1` ya enlaza libc++. | build y navegador |
+| `0010` | Jugador invisible (se veía sólo nombre y sombra) para quien ya estaba en la partida cuando otro entraba: con `cg_deferPlayers 1` el modelo se copia de otro cliente y `CG_CopyClientInfoModel` omitía `modelScale`, que quedaba en 0 y escalaba las tres partes del modelo por cero. | build |
+| `0011` | Sangre y mancha de daño como caja gris: `bloodSpray1-4` y `viewBloodBlend` usan `dlc_gibs/*.tga`, que no está en el `pak00.pk3` de Steam ni en el pak01 publicado (sólo textos). Shaders nuevos `qwBloodSpray1-4`/`qwViewBlood` (`content/pak01/scripts/quakeweb.shader`) con `gfx/damage/{ice_spurt,ice_stain,damage_screen}` del pak00, teñidos de rojo; cgame los registra. | build |
 
 Se retiró `0005`: era diagnóstico temporal y salteaba `Z_Free` ante configstrings NULL. La corrección conserva
 los controles originales del motor. El salto en la numeración mantiene la referencia del parche de aislamiento.
